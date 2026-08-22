@@ -176,7 +176,7 @@
   .searchbox { position:relative; }
   .searchbox svg { position:absolute; left:14px; top:50%; transform:translateY(-50%); width:18px; height:18px;
     stroke:var(--muted); fill:none; stroke-width:2; pointer-events:none; }
-  .searchbox input { padding-left:42px; }
+  .searchbox input { padding-left:42px; padding-right:70px; }
   .rescount { font-size:12px; color:var(--muted); font-weight:600; margin:2px 2px 0; }
 
   .frow { display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:none;
@@ -203,6 +203,14 @@
   .pv { background:var(--card2); border-radius:14px; padding:14px; text-align:center; }
   .pv .v { font-size:26px; font-weight:800; letter-spacing:-.02em; }
   .pv .k { font-size:12px; color:var(--muted); margin-top:2px; }
+
+  /* star button */
+  .frow .star { background:none; border:none; font-size:18px; padding:6px; cursor:pointer; flex-shrink:0;
+    opacity:.4; transition:opacity .15s, transform .15s; }
+  .frow .star:active { transform:scale(1.3); }
+  .frow .star.on { opacity:1; }
+  .star-divider { font-size:12px; font-weight:700; color:var(--muted); padding:12px 6px 4px;
+    text-transform:uppercase; letter-spacing:.04em; }
 </style>
 </head>
 <body>
@@ -340,14 +348,15 @@
         </div>
         <div class="searchbox" id="searchbox">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-          <input id="food-q" placeholder="Search 400+ foods (e.g. veg raita)" oninput="renderResults()" autocomplete="off">
+          <input id="food-q" placeholder="Search foods (e.g. veg raita)" oninput="renderResults()" onkeydown="if(event.key==='Enter'){this.blur();}" autocomplete="off" enterkeyhint="done">
+          <button id="kb-done" onclick="document.getElementById('food-q').blur()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--accent);color:var(--accent-ink);border:none;border-radius:9px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;">Done</button>
         </div>
         <div class="rescount" id="rescount"></div>
       </div>
       <div id="results"></div>
       <div id="pick-qty" style="display:none">
         <div class="sel-head"><span class="sn" id="sel-name"></span>
-          <button class="chip" onclick="clearSel()">↺ Change</button></div>
+          <span><button class="chip" id="unit-toggle" onclick="toggleUnit()" style="display:none;margin-right:6px">⇄ Unit</button><button class="chip" onclick="clearSel()">↺ Change</button></span></div>
         <label class="fl" id="qty-label">Grams</label>
         <div class="qty">
           <button onclick="adjustQty(-1)">−</button>
@@ -392,11 +401,16 @@ const LS = { get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch
 let profile = LS.get('profile', {weight:95, height:172.7, age:30, sex:'Male', activity:1.55, deficit:700, ppk:2.0});
 let foods = LS.get('foods', []);
 let weights = LS.get('weights', []);
+let starred = LS.get('starred', []); // array of food indices
 let selectedDate = startOfDay(new Date());
 let currentTab = 'profile';
 function saveProfile(){ LS.set('profile', profile); }
 function saveFoods(){ LS.set('foods', foods); }
 function saveWeights(){ LS.set('weights', weights); }
+function saveStarred(){ LS.set('starred', starred); }
+function toggleStar(i,e){ e.stopPropagation(); const idx=starred.indexOf(i);
+  if(idx>=0) starred.splice(idx,1); else starred.push(i);
+  saveStarred(); renderResults(); }
 
 // ---------- food db (per 100 g/ml, or per piece) ----------
 const FOODS = [
@@ -537,6 +551,12 @@ const FOODS = [
   {n:"Black tea",c:1,p:0,u:"ml",k:"chai no milk"},{n:"Green tea",c:1,p:0,u:"ml"},{n:"Lemon tea",c:15,p:0,u:"ml"},
   {n:"Hot chocolate",c:90,p:3,u:"ml"},{n:"Badam milk",c:120,p:4,u:"ml",k:"almond"},{n:"Milkshake",c:110,p:3,u:"ml"},
   {n:"Mango shake",c:100,p:2.5,u:"ml"},{n:"Lassi (sweet)",c:110,p:2.5,u:"ml"},{n:"Orange juice",c:45,p:0.7,u:"ml"},
+  {n:"Beetroot juice",c:43,p:1,u:"ml",k:"chukandar juice"},{n:"Carrot juice",c:40,p:0.9,u:"ml",k:"gajar juice"},
+  {n:"Apple juice",c:46,p:0.1,u:"ml",k:"seb juice"},{n:"Pomegranate juice",c:54,p:0.2,u:"ml",k:"anar juice"},
+  {n:"Watermelon juice",c:30,p:0.4,u:"ml",k:"tarbooj juice"},{n:"Pineapple juice",c:53,p:0.4,u:"ml",k:"ananas juice"},
+  {n:"Grape juice",c:60,p:0.4,u:"ml",k:"angoor juice"},{n:"Mosambi juice",c:43,p:0.4,u:"ml",k:"sweet lime juice"},
+  {n:"Mixed fruit juice",c:50,p:0.3,u:"ml"},{n:"Amla juice",c:30,p:0.5,u:"ml",k:"gooseberry juice"},
+  {n:"Lauki juice",c:12,p:0.3,u:"ml",k:"bottle gourd juice"},
   {n:"Packaged juice",c:50,p:0.3,u:"ml"},{n:"Coconut water",c:19,p:0.7,u:"ml",k:"nariyal"},{n:"Sugarcane juice",c:40,p:0.2,u:"ml",k:"ganne ka ras"},
   {n:"Nimbu pani",c:25,p:0.1,u:"ml",k:"lemonade shikanji"},{n:"Aam panna",c:60,p:0.3,u:"ml"},{n:"Sharbat / rooh afza",c:90,p:0,u:"ml",k:"rose"},
   {n:"Soft drink / cola",c:42,p:0,u:"ml",k:"soda coke pepsi thums up"},{n:"Energy drink",c:45,p:0,u:"ml",k:"red bull"},
@@ -561,7 +581,28 @@ const FOODS = [
 ];
 const unitInfo = { g:{basis:100,label:"Grams",def:100,step:10,suffix:"g",b:"per 100 g"},
                    ml:{basis:100,label:"Millilitres",def:250,step:10,suffix:"ml",b:"per 100 ml"},
-                   pc:{basis:1,label:"Quantity",def:1,step:1,suffix:"pc",b:"per piece"} };
+                   pc:{basis:1,label:"Quantity",def:1,step:1,suffix:"pc",b:"per piece"},
+                   slice:{basis:1,label:"Slices",def:2,step:1,suffix:"slice",b:"per slice"} };
+// alternate units: foods measured in g/ml that also have a piece/slice equivalent
+// format: {alt unit key, cal per alt unit, protein per alt unit}
+const ALT_UNITS = {
+  "White bread":{u:"slice",c:66,p:2.3},
+  "Brown bread":{u:"slice",c:63,p:3},
+  "Multigrain bread":{u:"slice",c:63,p:2.8},
+  "Garlic bread":{u:"slice",c:83,p:2},
+  "Pizza":{u:"pc",c:272,p:11},
+  "Oats (dry)":{u:"g",c:389,p:16.9},
+  "Bacon":{u:"pc",c:43,p:3},
+  "Cheese (cheddar)":{u:"pc",c:113,p:7},
+  "Mozzarella":{u:"pc",c:85,p:6.3},
+  "Paneer":{u:"pc",c:80,p:5.4},
+  "Dates":{u:"pc",c:20,p:0.1},
+  "Almonds":{u:"pc",c:7,p:0.3},
+  "Cashews":{u:"pc",c:9,p:0.3},
+  "Walnuts":{u:"pc",c:26,p:0.6},
+  "Biscuit":{u:"pc",c:20,p:0.3},
+  "Cookies":{u:"pc",c:50,p:0.6},
+};
 
 // ---------- helpers ----------
 function startOfDay(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
@@ -660,30 +701,69 @@ function renderResults(){
   const q=document.getElementById('food-q').value.trim().toLowerCase();
   const tokens=q.split(/\s+/).filter(Boolean);
   const all=tokens.length===0?FOODS:FOODS.filter(f=>foodMatches(f,tokens));
-  const list=all.slice(0,80);
+  const allIdx=all.map(f=>FOODS.indexOf(f));
+  // separate starred from rest
+  const starredItems=allIdx.filter(i=>starred.includes(i));
+  const otherItems=allIdx.filter(i=>!starred.includes(i));
+  const display=[...starredItems,...otherItems].slice(0,80);
+  const starCount=Math.min(starredItems.length,80);
   document.getElementById('rescount').textContent=
     tokens.length===0?`${FOODS.length} foods — start typing to filter`:`${all.length} result${all.length===1?'':'s'}`;
   const box=document.getElementById('results');
-  if(list.length===0){ box.innerHTML='<div class="empty">No match found.<br>Switch to <b>Custom</b> to enter it manually.</div>'; return; }
-  box.innerHTML=list.map(f=>{ const i=FOODS.indexOf(f);
-    return `<button class="frow" onclick="pick(${i})">
+  if(display.length===0){ box.innerHTML='<div class="empty">No match found.<br>Switch to <b>Custom</b> to enter it manually.</div>'; return; }
+  let html='';
+  if(starCount>0) html+='<div class="star-divider">⭐ Favourites</div>';
+  display.forEach((i,pos)=>{
+    if(pos===starCount && starCount>0) html+='<div class="star-divider">All</div>';
+    const f=FOODS[i]; const isStar=starred.includes(i);
+    html+=`<button class="frow" onclick="pick(${i})">
       <div class="fn"><div class="t">${escapeHtml(f.n)}</div><div class="s">${unitInfo[f.u].b}</div></div>
-      <div class="fm"><div class="c">${f.c} kcal</div><div class="p">${f.p} g protein</div></div></button>`; }).join('');
+      <div class="fm"><div class="c">${f.c} kcal</div><div class="p">${f.p} g protein</div></div>
+      <span class="star ${isStar?'on':''}" onclick="toggleStar(${i},event)">${isStar?'★':'☆'}</span></button>`;
+  });
+  box.innerHTML=html;
 }
-function pick(i){ sel=FOODS[i]; const info=unitInfo[sel.u];
+let useAlt=false; // whether we're using alternate unit for current selection
+function pick(i){ document.getElementById('food-q').blur(); sel=FOODS[i]; useAlt=false;
+  const info=unitInfo[sel.u];
   document.getElementById('sel-name').textContent=sel.n;
   document.getElementById('qty-label').textContent=info.label;
   document.getElementById('qty-unit').textContent=info.suffix;
   document.getElementById('qty').value=info.def;
+  // show unit toggle if alternate available
+  const alt=ALT_UNITS[sel.n];
+  document.getElementById('unit-toggle').style.display=alt?'inline-block':'none';
   updateSearchView(); renderPreview(); updateConfirm(); scrollSheetTop();
+}
+function toggleUnit(){
+  const alt=ALT_UNITS[sel.n]; if(!alt) return;
+  useAlt=!useAlt;
+  if(useAlt){
+    const info=unitInfo[alt.u];
+    document.getElementById('qty-label').textContent=info.label;
+    document.getElementById('qty-unit').textContent=info.suffix;
+    document.getElementById('qty').value=info.def;
+  } else {
+    const info=unitInfo[sel.u];
+    document.getElementById('qty-label').textContent=info.label;
+    document.getElementById('qty-unit').textContent=info.suffix;
+    document.getElementById('qty').value=info.def;
+  }
+  renderPreview(); updateConfirm();
 }
 function clearSel(){ sel=null; renderResults(); updateSearchView(); updateConfirm(); scrollSheetTop();
   document.getElementById('food-q').focus(); }
-function adjustQty(dir){ if(!sel) return; const info=unitInfo[sel.u];
+function adjustQty(dir){ if(!sel) return;
+  const alt=useAlt?ALT_UNITS[sel.n]:null;
+  const info=unitInfo[alt?alt.u:sel.u];
   let v=num(document.getElementById('qty').value)+dir*info.step; if(v<0)v=0;
   document.getElementById('qty').value=(info.step<1?v.toFixed(1):Math.round(v)); renderPreview(); updateConfirm(); }
-function servingCals(){ return sel.c*num(document.getElementById('qty').value)/unitInfo[sel.u].basis; }
-function servingProt(){ return sel.p*num(document.getElementById('qty').value)/unitInfo[sel.u].basis; }
+function servingCals(){ const q=num(document.getElementById('qty').value);
+  if(useAlt){ const alt=ALT_UNITS[sel.n]; return alt.c*q; }
+  return sel.c*q/unitInfo[sel.u].basis; }
+function servingProt(){ const q=num(document.getElementById('qty').value);
+  if(useAlt){ const alt=ALT_UNITS[sel.n]; return alt.p*q; }
+  return sel.p*q/unitInfo[sel.u].basis; }
 function renderPreview(){ if(!sel) return;
   document.getElementById('pv-cal').textContent=round(servingCals());
   document.getElementById('pv-prot').textContent=round(servingProt()); updateConfirm(); }
@@ -693,7 +773,9 @@ function updateConfirm(){ const b=document.getElementById('add-confirm');
 ['c-cal','c-prot','c-name'].forEach(id=>document.addEventListener('input',e=>{ if(e.target.id===id) updateConfirm(); }));
 function confirmAdd(){
   const day=startOfDay(selectedDate); let entry;
-  if(mode==='search'&&sel){ const q=num(document.getElementById('qty').value); const info=unitInfo[sel.u];
+  if(mode==='search'&&sel){ const q=num(document.getElementById('qty').value);
+    const alt=useAlt?ALT_UNITS[sel.n]:null;
+    const info=unitInfo[alt?alt.u:sel.u];
     entry={ id:uid(), name:`${sel.n} — ${info.step<1?q:round(q)} ${info.suffix}`, calories:servingCals(), protein:servingProt(), date:day.toISOString() };
   } else { entry={ id:uid(), name:(document.getElementById('c-name').value.trim()||'Meal'),
     calories:num(document.getElementById('c-cal').value), protein:num(document.getElementById('c-prot').value), date:day.toISOString() }; }
@@ -781,7 +863,7 @@ function syncProfileInputs(){
   document.getElementById('p-activity').value=String(profile.activity);
 }
 function exportData(){
-  const data={ app:'calorie-tracker', version:2, profile, foods, weights };
+  const data={ app:'calorie-tracker', version:2, profile, foods, weights, starred };
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob); const a=document.createElement('a');
   a.href=url; a.download='calorie-tracker-backup.json'; document.body.appendChild(a); a.click(); a.remove();
@@ -794,7 +876,8 @@ function importData(e){
       if(!confirm('Import this backup? It will replace all data on this device.')){ e.target.value=''; return; }
       if(d.profile) profile=Object.assign({weight:95,height:172.7,age:30,sex:'Male',activity:1.55,deficit:700,ppk:2.0},d.profile);
       if(Array.isArray(d.foods)) foods=d.foods; if(Array.isArray(d.weights)) weights=d.weights;
-      saveProfile(); saveFoods(); saveWeights(); syncProfileInputs(); renderProfile(); renderLog(); renderWeight();
+      if(Array.isArray(d.starred)) starred=d.starred;
+      saveProfile(); saveFoods(); saveWeights(); saveStarred(); syncProfileInputs(); renderProfile(); renderLog(); renderWeight();
       alert('Backup imported successfully.');
     }catch(err){ alert('Could not read that file. Make sure it is a Calorie Tracker backup (.json).'); }
     e.target.value=''; };

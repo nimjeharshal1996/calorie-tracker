@@ -70,9 +70,20 @@
   .modal { position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; z-index:100;
     align-items:flex-end; }
   .modal.open { display:flex; }
-  .sheet { background:var(--card); width:100%; border-radius:20px 20px 0 0; padding:16px;
-    padding-bottom: calc(20px + env(safe-area-inset-bottom)); max-height:88vh; overflow:auto; }
-  .sheet h3 { margin:4px 0 12px; }
+  .sheet { background:var(--card); width:100%; border-radius:20px 20px 0 0;
+    max-height:90vh; display:flex; flex-direction:column; overflow:hidden; }
+  .sheet-head { display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:14px 16px; border-bottom:1px solid var(--line); flex-shrink:0; }
+  .sheet-head .head-title { font-weight:600; font-size:17px; }
+  .head-btn { background:none; border:none; color:var(--accent); font-size:16px; padding:6px 4px; }
+  .head-btn.primary { font-weight:700; }
+  .head-btn:disabled { opacity:.4; }
+  .sheet-body { flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding:12px 16px calc(20px + env(safe-area-inset-bottom)); }
+  .sheet-sticky { position:sticky; top:0; background:var(--card); padding:6px 0 10px; z-index:2; }
+  .sheet-sticky .seg { margin-bottom:10px; }
+  .sel-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+  .chip { background:var(--card2); border:none; color:var(--text); padding:6px 12px; border-radius:8px; font-size:14px; }
   .seg { display:flex; background:var(--card2); border-radius:10px; padding:3px; margin-bottom:12px; }
   .seg button { flex:1; border:none; background:none; color:var(--muted); padding:8px; border-radius:8px; font-size:14px; }
   .seg button.active { background:var(--accent); color:#fff; }
@@ -199,35 +210,35 @@
 <!-- Add meal modal -->
 <div class="modal" id="addModal">
   <div class="sheet">
-    <h3>Add Meal</h3>
-    <div class="seg">
-      <button id="seg-search" class="active" onclick="setMode('search')">Search</button>
-      <button id="seg-custom" onclick="setMode('custom')">Custom</button>
+    <div class="sheet-head">
+      <button class="head-btn" onclick="closeAdd()">Cancel</button>
+      <span class="head-title">Add Meal</span>
+      <button class="head-btn primary" id="add-confirm" onclick="confirmAdd()">Add</button>
     </div>
-    <div id="mode-search">
-      <div id="pick-food">
-        <input id="food-q" placeholder="Search food (e.g. chicken, coffee)" oninput="renderResults()">
-        <div id="results"></div>
+    <div class="sheet-body" id="sheet-body">
+      <div class="sheet-sticky">
+        <div class="seg">
+          <button id="seg-search" class="active" onclick="setMode('search')">Search</button>
+          <button id="seg-custom" onclick="setMode('custom')">Custom</button>
+        </div>
+        <input id="food-q" placeholder="Search food (e.g. chicken, veg roll)" oninput="renderResults()">
       </div>
+      <div id="results"></div>
       <div id="pick-qty" style="display:none">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="sel-head">
           <strong id="sel-name"></strong>
-          <button class="btn-cancel" style="padding:6px 12px;border-radius:8px;border:none;" onclick="clearSel()">Change</button>
+          <button class="chip" onclick="clearSel()">↺ Change</button>
         </div>
         <label id="qty-label">Grams</label>
         <input id="qty" type="number" inputmode="decimal" oninput="renderPreview()">
         <div class="preview"><span class="k">Calories</span><strong id="pv-cal">0 kcal</strong></div>
         <div class="preview"><span class="k">Protein</span><strong id="pv-prot">0 g</strong></div>
       </div>
-    </div>
-    <div id="mode-custom" style="display:none">
-      <label>Meal name</label><input id="c-name" placeholder="Meal">
-      <label>Calories (kcal)</label><input id="c-cal" type="number" inputmode="decimal">
-      <label>Protein (g)</label><input id="c-prot" type="number" inputmode="decimal">
-    </div>
-    <div class="sheetbtns">
-      <button class="btn-cancel" onclick="closeAdd()">Cancel</button>
-      <button class="btn-primary" id="add-confirm" onclick="confirmAdd()">Add</button>
+      <div id="mode-custom" style="display:none">
+        <label>Meal name</label><input id="c-name" placeholder="Meal">
+        <label>Calories (kcal)</label><input id="c-cal" type="number" inputmode="decimal">
+        <label>Protein (g)</label><input id="c-prot" type="number" inputmode="decimal">
+      </div>
     </div>
   </div>
 </div>
@@ -235,12 +246,14 @@
 <!-- Add weight modal -->
 <div class="modal" id="weightModal">
   <div class="sheet">
-    <h3>Log Weight</h3>
-    <label>Weight (kg)</label><input id="w-val" type="number" inputmode="decimal">
-    <label>Date</label><input id="w-date" type="date">
-    <div class="sheetbtns">
-      <button class="btn-cancel" onclick="closeWeight()">Cancel</button>
-      <button class="btn-primary" onclick="confirmWeight()">Save</button>
+    <div class="sheet-head">
+      <button class="head-btn" onclick="closeWeight()">Cancel</button>
+      <span class="head-title">Log Weight</span>
+      <button class="head-btn primary" onclick="confirmWeight()">Save</button>
+    </div>
+    <div class="sheet-body">
+      <label>Weight (kg)</label><input id="w-val" type="number" inputmode="decimal">
+      <label>Date</label><input id="w-date" type="date">
     </div>
   </div>
 </div>
@@ -398,6 +411,174 @@ const FOODS = [
   {n:"Ice cream",               c:207, p:3.5, u:"g"},
   {n:"Dark chocolate",          c:546, p:7.8, u:"g"},
   {n:"Biscuit",                 c:20,  p:0.3, u:"pc", k:"cookie marie"},
+  // More non-veg
+  {n:"Chicken leg (roasted)",   c:190, p:28,  u:"g", k:"drumstick"},
+  {n:"Chicken keema",           c:200, p:18,  u:"g", k:"minced mince"},
+  {n:"Chicken tikka",           c:195, p:25,  u:"g"},
+  {n:"Seekh kebab",             c:230, p:18,  u:"g", k:"kabab"},
+  {n:"Fish curry",              c:130, p:12,  u:"g"},
+  {n:"Fish fry",                c:250, p:20,  u:"g"},
+  {n:"Fish tikka",              c:150, p:22,  u:"g"},
+  {n:"Crab (cooked)",           c:97,  p:19,  u:"g"},
+  {n:"Squid (cooked)",          c:92,  p:15,  u:"g", k:"calamari"},
+  {n:"Bacon",                   c:541, p:37,  u:"g"},
+  {n:"Sausage",                 c:300, p:12,  u:"g"},
+  {n:"Ham",                     c:145, p:18,  u:"g"},
+  {n:"Salami",                  c:336, p:22,  u:"g"},
+  {n:"Turkey breast",           c:135, p:29,  u:"g"},
+  {n:"Lamb chops",              c:294, p:25,  u:"g"},
+  {n:"Omelette",                c:154, p:11,  u:"g"},
+  {n:"Egg bhurji",              c:200, p:13,  u:"g", k:"scrambled anda"},
+  {n:"Boiled egg (whole)",      c:155, p:13,  u:"g"},
+  // More dairy & paneer
+  {n:"Skimmed milk",            c:34,  p:3.4, u:"ml", k:"skim fat free"},
+  {n:"Almond milk",             c:15,  p:0.5, u:"ml"},
+  {n:"Soy milk",                c:54,  p:3.3, u:"ml"},
+  {n:"Condensed milk",          c:321, p:8,   u:"g"},
+  {n:"Fresh cream",             c:340, p:2,   u:"g", k:"malai"},
+  {n:"Mozzarella",              c:280, p:22,  u:"g"},
+  {n:"Cottage cheese (low fat)",c:98,  p:11,  u:"g"},
+  {n:"Cheese slice",            c:60,  p:3.5, u:"pc", k:"processed"},
+  {n:"Paneer bhurji",           c:220, p:14,  u:"g"},
+  {n:"Malai kofta",             c:250, p:6,   u:"g"},
+  {n:"Matar paneer",            c:180, p:8,   u:"g", k:"peas"},
+  {n:"Shrikhand",               c:250, p:6,   u:"g"},
+  {n:"Flavoured yogurt",        c:95,  p:4,   u:"g"},
+  // More breads & grains
+  {n:"Bhatura",                 c:330, p:7,   u:"pc"},
+  {n:"Kulcha",                  c:250, p:7,   u:"pc"},
+  {n:"Thepla",                  c:250, p:5,   u:"pc"},
+  {n:"Missi roti",              c:180, p:6,   u:"pc"},
+  {n:"Rumali roti",             c:240, p:8,   u:"pc"},
+  {n:"Multigrain bread",        c:250, p:11,  u:"g"},
+  {n:"Garlic bread",            c:330, p:8,   u:"g"},
+  {n:"Appam",                   c:120, p:2,   u:"pc"},
+  {n:"Uttapam",                 c:150, p:4,   u:"pc"},
+  {n:"Rava dosa",               c:200, p:4,   u:"pc"},
+  {n:"Pongal",                  c:150, p:4,   u:"g"},
+  {n:"Lemon rice",              c:160, p:3,   u:"g"},
+  {n:"Curd rice",               c:130, p:3,   u:"g", k:"dahi"},
+  {n:"Veg fried rice",          c:165, p:4,   u:"g"},
+  {n:"Egg fried rice",          c:185, p:6,   u:"g"},
+  {n:"Chicken fried rice",      c:190, p:9,   u:"g"},
+  {n:"Schezwan noodles",        c:175, p:5,   u:"g"},
+  {n:"Quinoa (cooked)",         c:120, p:4.4, u:"g"},
+  {n:"Couscous (cooked)",       c:112, p:3.8, u:"g"},
+  {n:"Ragi / millet (cooked)",  c:120, p:3.5, u:"g", k:"bajra jowar finger"},
+  {n:"Daliya (cooked)",         c:150, p:5,   u:"g", k:"broken wheat porridge"},
+  {n:"Muesli",                  c:360, p:9,   u:"g"},
+  {n:"Granola",                 c:471, p:10,  u:"g"},
+  {n:"Pancake",                 c:227, p:6,   u:"pc"},
+  {n:"Waffle",                  c:290, p:7,   u:"pc"},
+  {n:"Sabudana khichdi",        c:200, p:2,   u:"g", k:"sago tapioca"},
+  // More dals & veg dishes
+  {n:"Toor dal (cooked)",       c:120, p:7,   u:"g", k:"arhar"},
+  {n:"Chana dal (cooked)",      c:120, p:8,   u:"g"},
+  {n:"Masoor dal (cooked)",     c:115, p:9,   u:"g", k:"red lentil"},
+  {n:"Kadhi",                   c:90,  p:3,   u:"g"},
+  {n:"Aloo gobi",               c:120, p:3,   u:"g", k:"potato cauliflower"},
+  {n:"Bhindi masala",           c:130, p:2.5, u:"g", k:"okra ladyfinger"},
+  {n:"Baingan bharta",          c:100, p:2,   u:"g", k:"eggplant brinjal"},
+  {n:"Aloo matar",              c:120, p:4,   u:"g", k:"potato peas"},
+  {n:"Veg kolhapuri",           c:150, p:4,   u:"g"},
+  {n:"Undhiyu",                 c:150, p:4,   u:"g"},
+  // More snacks & fast food
+  {n:"Kachori",                 c:300, p:5,   u:"pc"},
+  {n:"Dahi vada",               c:150, p:4,   u:"pc", k:"dahi bhalla"},
+  {n:"Sev",                     c:500, p:17,  u:"g"},
+  {n:"Namkeen / mixture",       c:500, p:12,  u:"g"},
+  {n:"Bhujia",                  c:540, p:13,  u:"g"},
+  {n:"Chakli / murukku",        c:500, p:9,   u:"g"},
+  {n:"Potato chips",            c:536, p:7,   u:"g", k:"wafers"},
+  {n:"Popcorn",                 c:387, p:12,  u:"g"},
+  {n:"Nachos",                  c:490, p:7,   u:"g"},
+  {n:"Cheese sandwich",         c:300, p:10,  u:"pc"},
+  {n:"Grilled sandwich",        c:280, p:9,   u:"pc"},
+  {n:"Bread pakora",            c:280, p:6,   u:"pc"},
+  {n:"Veg cutlet",              c:180, p:4,   u:"pc"},
+  {n:"Chicken nuggets",         c:296, p:15,  u:"g"},
+  {n:"Hot dog",                 c:290, p:11,  u:"pc"},
+  {n:"Shawarma",                c:250, p:14,  u:"pc", k:"roll"},
+  {n:"Falafel",                 c:333, p:13,  u:"g"},
+  {n:"Hummus",                  c:166, p:8,   u:"g"},
+  {n:"Pasta (white sauce)",     c:180, p:6,   u:"g", k:"alfredo"},
+  {n:"Pasta (red sauce)",       c:150, p:5,   u:"g", k:"arrabbiata"},
+  {n:"Mac and cheese",          c:250, p:9,   u:"g"},
+  // More fruits
+  {n:"Pineapple",               c:50,  p:0.5, u:"g", k:"ananas"},
+  {n:"Strawberry",              c:32,  p:0.7, u:"g"},
+  {n:"Blueberry",               c:57,  p:0.7, u:"g"},
+  {n:"Kiwi",                    c:61,  p:1.1, u:"g"},
+  {n:"Pear",                    c:57,  p:0.4, u:"g", k:"nashpati"},
+  {n:"Peach",                   c:39,  p:0.9, u:"g"},
+  {n:"Plum",                    c:46,  p:0.7, u:"g", k:"aloo bukhara"},
+  {n:"Litchi",                  c:66,  p:0.8, u:"g", k:"lychee"},
+  {n:"Custard apple",           c:94,  p:2.1, u:"g", k:"sitaphal"},
+  {n:"Sapota / chikoo",         c:83,  p:0.4, u:"g"},
+  {n:"Muskmelon",               c:34,  p:0.8, u:"g", k:"cantaloupe kharbooja"},
+  {n:"Jackfruit",               c:95,  p:1.7, u:"g", k:"kathal"},
+  {n:"Raisins",                 c:299, p:3.1, u:"g", k:"kishmish"},
+  {n:"Fig (dried)",             c:249, p:3.3, u:"g", k:"anjeer"},
+  {n:"Coconut (fresh)",         c:354, p:3.3, u:"g", k:"nariyal"},
+  {n:"Lemon",                   c:29,  p:1.1, u:"g", k:"nimbu"},
+  // More vegetables
+  {n:"Cauliflower",             c:25,  p:1.9, u:"g", k:"gobi"},
+  {n:"Cabbage",                 c:25,  p:1.3, u:"g", k:"patta gobi"},
+  {n:"Green peas",              c:81,  p:5,   u:"g", k:"matar"},
+  {n:"French beans",            c:31,  p:1.8, u:"g"},
+  {n:"Capsicum",                c:20,  p:0.9, u:"g", k:"bell pepper shimla mirch"},
+  {n:"Mushroom",                c:22,  p:3.1, u:"g"},
+  {n:"Beetroot",                c:43,  p:1.6, u:"g", k:"chukandar"},
+  {n:"Bottle gourd",            c:14,  p:0.6, u:"g", k:"lauki ghiya"},
+  {n:"Bitter gourd",            c:17,  p:1,   u:"g", k:"karela"},
+  {n:"Pumpkin",                 c:26,  p:1,   u:"g", k:"kaddu"},
+  {n:"Radish",                  c:16,  p:0.7, u:"g", k:"mooli"},
+  {n:"Sweet corn",              c:86,  p:3.2, u:"g", k:"bhutta makka"},
+  // More beverages
+  {n:"Black tea (no milk)",     c:1,   p:0,   u:"ml", k:"chai"},
+  {n:"Cappuccino",              c:40,  p:1.9, u:"ml"},
+  {n:"Latte",                   c:55,  p:3,   u:"ml"},
+  {n:"Cold coffee",             c:90,  p:2.5, u:"ml"},
+  {n:"Milkshake",               c:110, p:3,   u:"ml"},
+  {n:"Mango shake",             c:100, p:2.5, u:"ml"},
+  {n:"Hot chocolate",           c:90,  p:3,   u:"ml"},
+  {n:"Energy drink",            c:45,  p:0,   u:"ml", k:"red bull"},
+  {n:"Packaged juice",          c:50,  p:0.3, u:"ml"},
+  {n:"Nimbu pani",              c:25,  p:0.1, u:"ml", k:"lemonade shikanji"},
+  {n:"Sugarcane juice",         c:40,  p:0.2, u:"ml", k:"ganne ka ras"},
+  {n:"Whiskey / spirits",       c:250, p:0,   u:"ml", k:"vodka rum gin"},
+  {n:"Coconut milk",            c:230, p:2.3, u:"ml"},
+  // More sweets
+  {n:"Rasmalai",                c:190, p:5,   u:"pc"},
+  {n:"Kaju katli",              c:500, p:9,   u:"g"},
+  {n:"Soan papdi",              c:450, p:5,   u:"g"},
+  {n:"Suji halwa",              c:320, p:5,   u:"g", k:"semolina sheera"},
+  {n:"Modak",                   c:180, p:3,   u:"pc"},
+  {n:"Peda",                    c:380, p:6,   u:"pc"},
+  {n:"Kulfi",                   c:200, p:4,   u:"pc"},
+  {n:"Chikki",                  c:450, p:10,  u:"g", k:"peanut brittle gajak"},
+  {n:"Sponge cake",             c:350, p:5,   u:"g"},
+  {n:"Pastry",                  c:350, p:4,   u:"pc"},
+  {n:"Donut",                   c:452, p:5,   u:"pc", k:"doughnut"},
+  {n:"Muffin",                  c:380, p:6,   u:"pc"},
+  {n:"Brownie",                 c:466, p:6,   u:"pc"},
+  {n:"Milk chocolate",          c:535, p:7.6, u:"g"},
+  {n:"Honey",                   c:304, p:0.3, u:"g", k:"shahad"},
+  {n:"Sugar",                   c:387, p:0,   u:"g", k:"cheeni"},
+  {n:"Jaggery",                 c:383, p:0.4, u:"g", k:"gur"},
+  // Condiments, sides & soups
+  {n:"Tomato ketchup",          c:100, p:1.3, u:"g", k:"sauce"},
+  {n:"Mayonnaise",              c:680, p:1,   u:"g"},
+  {n:"Green chutney",           c:90,  p:2,   u:"g", k:"mint coriander"},
+  {n:"Coconut chutney",         c:130, p:2,   u:"g"},
+  {n:"Pickle / achar",          c:150, p:1,   u:"g"},
+  {n:"Papad",                   c:370, p:18,  u:"g", k:"papadum"},
+  {n:"Raita",                   c:60,  p:2,   u:"g"},
+  {n:"Rasam",                   c:40,  p:1.5, u:"g"},
+  {n:"Veg soup",                c:40,  p:1.5, u:"g"},
+  {n:"Tomato soup",             c:50,  p:1.2, u:"g"},
+  {n:"Sweet corn soup",         c:60,  p:1.8, u:"g"},
+  {n:"Chicken soup",            c:45,  p:4,   u:"g"},
 ];
 const unitInfo = { g:{basis:100,label:"Grams",def:100,suffix:"g",b:"100 g"},
                    ml:{basis:100,label:"Millilitres",def:250,suffix:"ml",b:"100 ml"},
@@ -474,16 +655,34 @@ function escapeHtml(s){ return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;',
 
 // ---------- add meal modal ----------
 let mode='search', sel=null;
-function openAdd(){ mode='search'; sel=null; document.getElementById('food-q').value=''; document.getElementById('qty').value='';
-  document.getElementById('c-name').value=''; document.getElementById('c-cal').value=''; document.getElementById('c-prot').value='';
-  setMode('search'); clearSel(); document.getElementById('addModal').classList.add('open'); }
+function scrollSheetTop(){ const b=document.getElementById('sheet-body'); if(b) b.scrollTop=0; }
+function openAdd(){
+  mode='search'; sel=null;
+  document.getElementById('food-q').value='';
+  document.getElementById('qty').value='';
+  document.getElementById('c-name').value='';
+  document.getElementById('c-cal').value='';
+  document.getElementById('c-prot').value='';
+  document.getElementById('seg-search').classList.add('active');
+  document.getElementById('seg-custom').classList.remove('active');
+  renderResults(); updateSearchView(); updateConfirm();
+  document.getElementById('addModal').classList.add('open');
+  scrollSheetTop();
+}
 function closeAdd(){ document.getElementById('addModal').classList.remove('open'); }
-function setMode(m){ mode=m;
+function setMode(m){
+  mode=m; sel=null;
   document.getElementById('seg-search').classList.toggle('active', m==='search');
   document.getElementById('seg-custom').classList.toggle('active', m==='custom');
-  document.getElementById('mode-search').style.display = m==='search'?'block':'none';
-  document.getElementById('mode-custom').style.display = m==='custom'?'block':'none';
-  updateConfirm();
+  if(m==='search') renderResults();
+  updateSearchView(); updateConfirm(); scrollSheetTop();
+}
+function updateSearchView(){
+  const searchMode = (mode==='search');
+  document.getElementById('food-q').style.display   = (searchMode && !sel) ? 'block':'none';
+  document.getElementById('results').style.display  = (searchMode && !sel) ? 'block':'none';
+  document.getElementById('pick-qty').style.display = (searchMode && sel)  ? 'block':'none';
+  document.getElementById('mode-custom').style.display = (!searchMode) ? 'block':'none';
 }
 function foodMatches(f, tokens){
   const hay = (f.n + ' ' + (f.k||'')).toLowerCase();
@@ -500,17 +699,13 @@ function renderResults(){
       <small>${f.c} kcal · ${f.p}g P / ${unitInfo[f.u].b}</small></div>`; }).join('');
 }
 function pick(i){ sel=FOODS[i]; const info=unitInfo[sel.u];
-  document.getElementById('pick-food').style.display='none';
-  document.getElementById('pick-qty').style.display='block';
   document.getElementById('sel-name').textContent=sel.n;
   document.getElementById('qty-label').textContent=info.label;
   document.getElementById('qty').value=info.def;
-  renderPreview(); updateConfirm();
+  updateSearchView(); renderPreview(); updateConfirm(); scrollSheetTop();
 }
 function clearSel(){ sel=null;
-  document.getElementById('pick-food').style.display='block';
-  document.getElementById('pick-qty').style.display='none';
-  renderResults(); updateConfirm();
+  renderResults(); updateSearchView(); updateConfirm(); scrollSheetTop();
 }
 function servingCals(){ const q=num(document.getElementById('qty').value); return sel.c*q/unitInfo[sel.u].basis; }
 function servingProt(){ const q=num(document.getElementById('qty').value); return sel.p*q/unitInfo[sel.u].basis; }

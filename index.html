@@ -4,120 +4,224 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0b0b0f">
+<meta name="theme-color" content="#0d0d0d">
 <title>Calorie Tracker</title>
 <style>
   :root {
-    --bg: #0b0b0f; --card: #17171d; --card2:#1f1f27; --text: #f2f2f7; --muted: #8e8e93;
-    --green: #34c759; --red: #ff453a; --blue: #0a84ff; --line:#2c2c34; --accent:#0a84ff;
+    color-scheme: light dark;
+    --page:#f4f4f2; --card:#ffffff; --card2:#f2f1ee; --field:#f4f3f0;
+    --text:#0b0b0b; --text2:#52514e; --muted:#8a8880; --line:#e6e5df; --border:rgba(11,11,11,.08);
+    --accent:#2a78d6; --accent-ink:#ffffff; --good:#0ca30c; --crit:#d03b3b;
+    --track:#e6e5df; --shadow:0 1px 2px rgba(0,0,0,.06), 0 6px 16px rgba(0,0,0,.05);
+    --nav-h:64px;
   }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html,body { margin:0; padding:0; background:var(--bg); color:var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; }
-  body { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
-  header { padding: calc(env(safe-area-inset-top) + 14px) 20px 12px; font-size: 28px; font-weight: 700; }
-  .page { display:none; padding: 0 16px 24px; }
-  .page.active { display:block; }
-  .card { background:var(--card); border-radius:16px; padding:16px; margin:12px 0; }
-  label { display:block; font-size:13px; color:var(--muted); margin: 10px 0 4px; }
-  input, select {
-    width:100%; background:var(--card2); border:1px solid var(--line); color:var(--text);
-    border-radius:10px; padding:12px; font-size:16px; outline:none;
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page:#0c0c0d; --card:#1a1a1c; --card2:#242427; --field:#242427;
+      --text:#ffffff; --text2:#c3c2b7; --muted:#8a8880; --line:#2b2b2e; --border:rgba(255,255,255,.09);
+      --accent:#3987e5; --accent-ink:#ffffff; --good:#22c55e; --crit:#e66767;
+      --track:#2b2b2e; --shadow:none;
+    }
   }
-  .row { display:flex; gap:12px; }
-  .row > div { flex:1; }
-  .result { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line); }
-  .result:last-child { border-bottom:none; }
-  .result .k { color:var(--muted); }
-  .result .v { font-weight:600; }
-  .result .v.hl { color:var(--accent); }
-  .hint { font-size:12px; color:var(--muted); margin-top:8px; line-height:1.4; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; padding:0; }
+  body {
+    background:var(--page); color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:16px; line-height:1.4;
+    padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));
+    -webkit-font-smoothing:antialiased;
+  }
+  .appbar {
+    position:sticky; top:0; z-index:30;
+    padding:calc(env(safe-area-inset-top) + 14px) 20px 12px;
+    background:color-mix(in srgb, var(--page) 85%, transparent);
+    backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px);
+    font-size:30px; font-weight:800; letter-spacing:-.02em;
+  }
+  .page { display:none; padding:4px 16px 28px; max-width:520px; margin:0 auto; }
+  .page.active { display:block; animation:fade .25s ease; }
+  @keyframes fade { from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:none} }
 
-  /* tab bar */
-  nav { position:fixed; bottom:0; left:0; right:0; display:flex;
-    background:rgba(20,20,26,0.92); backdrop-filter:blur(20px);
-    border-top:1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index:50; }
-  nav button { flex:1; background:none; border:none; color:var(--muted); padding:10px 0 8px;
-    font-size:11px; display:flex; flex-direction:column; align-items:center; gap:3px; }
-  nav button.active { color:var(--accent); }
-  nav button .ic { font-size:20px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:20px;
+    padding:18px; margin:14px 0; box-shadow:var(--shadow); }
+  .card-title { font-size:13px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--muted); margin:0 0 12px; }
+
+  label.fl { display:block; font-size:12.5px; color:var(--muted); margin:14px 0 6px; font-weight:600; }
+  label.fl:first-child { margin-top:0; }
+  input, select {
+    width:100%; background:var(--field); border:1px solid transparent; color:var(--text);
+    border-radius:13px; padding:13px 14px; font-size:16px; outline:none; font-family:inherit;
+    transition:border-color .15s, background .15s;
+  }
+  input:focus, select:focus { border-color:var(--accent); background:var(--card); }
+  select { appearance:none; -webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238a8880' d='M6 8 0 0h12z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 16px center; padding-right:38px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  /* profile results */
+  .hero { text-align:center; padding:22px 18px; }
+  .hero .lab { font-size:13px; font-weight:600; color:var(--muted); }
+  .hero .big { font-size:52px; font-weight:800; letter-spacing:-.03em; line-height:1.05; margin:6px 0 2px; }
+  .hero .unit { font-size:20px; font-weight:600; color:var(--muted); }
+  .tiles { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:16px; }
+  .tile { background:var(--card2); border-radius:14px; padding:12px 8px; text-align:center; }
+  .tile .v { font-size:19px; font-weight:700; }
+  .tile .k { font-size:11px; color:var(--muted); margin-top:2px; }
+  .hint { font-size:12.5px; color:var(--muted); margin-top:12px; line-height:1.45; }
+
+  .btn-row { display:flex; gap:10px; margin-top:6px; }
+  .btn { flex:1; border:none; border-radius:13px; padding:13px; font-size:15px; font-weight:700;
+    font-family:inherit; cursor:pointer; transition:transform .1s, opacity .15s; }
+  .btn:active { transform:scale(.97); }
+  .btn-primary { background:var(--accent); color:var(--accent-ink); }
+  .btn-primary:disabled { opacity:.4; }
+  .btn-ghost { background:var(--card2); color:var(--text); }
 
   /* daily log */
   .datenav { display:flex; align-items:center; justify-content:space-between; }
-  .datenav button { background:var(--card2); border:none; color:var(--text); width:40px; height:40px;
-    border-radius:20px; font-size:20px; }
-  .datenav .d { text-align:center; }
-  .datenav .d .wk { font-weight:600; }
-  .datenav .d .dt { color:var(--muted); font-size:13px; }
-  .ringwrap { display:flex; justify-content:center; margin:8px 0; position:relative; }
-  .ringtext { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; }
-  .ringtext .big { font-size:40px; font-weight:700; }
-  .ringtext .sub { color:var(--muted); font-size:13px; }
-  .ringtext .rem { font-size:14px; font-weight:600; margin-top:4px; }
-  .pbar { height:10px; background:var(--card2); border-radius:5px; overflow:hidden; }
-  .pbar > div { height:100%; background:var(--blue); border-radius:5px; transition:width .3s; }
-  .meal { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); }
-  .meal .nm { flex:1; }
-  .meal .nm small { display:block; color:var(--muted); font-size:12px; }
-  .meal .cal { font-weight:600; }
-  .meal .del { background:none; border:none; color:var(--red); font-size:18px; }
-  .addbtn { width:100%; background:var(--accent); color:#fff; border:none; border-radius:12px;
-    padding:14px; font-size:16px; font-weight:600; margin-top:8px; }
-  .empty { color:var(--muted); text-align:center; padding:16px 0; }
+  .nav-arrow { background:var(--card2); border:none; color:var(--text); width:42px; height:42px;
+    border-radius:14px; font-size:20px; display:grid; place-items:center; cursor:pointer; }
+  .nav-arrow:active { transform:scale(.94); }
+  .datelabel { text-align:center; }
+  .datelabel .wk { font-weight:700; font-size:17px; }
+  .datelabel .dt { color:var(--muted); font-size:13px; margin-top:1px; }
+  .today-pill { display:inline-block; margin:10px auto 0; padding:5px 14px; border-radius:20px;
+    background:var(--accent); color:var(--accent-ink); font-size:12.5px; font-weight:700; border:none; cursor:pointer; }
+  .center { text-align:center; }
 
-  /* modal */
-  .modal { position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; z-index:100;
-    align-items:flex-end; }
+  .ringwrap { display:flex; justify-content:center; margin:6px 0; position:relative; }
+  .ringtext { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; width:70%; }
+  .ringtext .big { font-size:44px; font-weight:800; letter-spacing:-.03em; line-height:1; }
+  .ringtext .sub { color:var(--muted); font-size:13px; margin-top:3px; }
+  .ringtext .rem { font-size:14px; font-weight:700; margin-top:8px; }
+
+  .macro { margin-top:4px; }
+  .macro-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+  .macro-head .name { font-weight:700; }
+  .macro-head .val { color:var(--muted); font-size:14px; font-variant-numeric:tabular-nums; }
+  .pbar { height:12px; background:var(--track); border-radius:6px; overflow:hidden; }
+  .pbar > div { height:100%; background:var(--accent); border-radius:6px; transition:width .35s ease; }
+
+  .meal { display:flex; align-items:center; gap:12px; padding:13px 0; border-bottom:1px solid var(--line); }
+  .meal:last-child { border-bottom:none; }
+  .meal .nm { flex:1; min-width:0; }
+  .meal .nm .t { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .meal .nm small { color:var(--muted); font-size:12.5px; }
+  .meal .cal { font-weight:700; font-variant-numeric:tabular-nums; }
+  .meal .del { background:none; border:none; color:var(--muted); font-size:16px; padding:8px;
+    border-radius:10px; cursor:pointer; }
+  .meal .del:active { background:var(--card2); color:var(--crit); }
+  .empty { color:var(--muted); text-align:center; padding:22px 8px; font-size:14.5px; }
+
+  /* weight */
+  .wstats { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:6px; }
+  .wstat { background:var(--card2); border-radius:14px; padding:14px; }
+  .wstat .k { font-size:12px; color:var(--muted); font-weight:600; }
+  .wstat .v { font-size:24px; font-weight:800; letter-spacing:-.02em; margin-top:3px; font-variant-numeric:tabular-nums; }
+  .delta.down { color:var(--good); } .delta.up { color:var(--crit); }
+  #chart { position:relative; }
+  #chart svg { display:block; width:100%; height:auto; overflow:visible; }
+  #chart .axlab { fill:var(--muted); font-size:10px; font-family:inherit; }
+  .chart-tip { position:absolute; transform:translate(-50%,-115%); background:var(--text); color:var(--page);
+    padding:5px 9px; border-radius:9px; font-size:12px; font-weight:700; white-space:nowrap; pointer-events:none;
+    opacity:0; transition:opacity .1s; box-shadow:0 3px 10px rgba(0,0,0,.25); }
+
+  /* floating action button */
+  .fab { position:fixed; right:20px; bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);
+    width:60px; height:60px; border-radius:20px; border:none; background:var(--accent); color:#fff;
+    font-size:30px; font-weight:300; display:none; place-items:center; z-index:40; cursor:pointer;
+    box-shadow:0 6px 20px color-mix(in srgb, var(--accent) 55%, transparent); }
+  .fab.show { display:grid; animation:pop .2s ease; }
+  .fab:active { transform:scale(.92); }
+  @keyframes pop { from{transform:scale(.6); opacity:0} to{transform:none; opacity:1} }
+
+  /* tab bar */
+  nav { position:fixed; bottom:0; left:0; right:0; z-index:45; display:flex;
+    background:color-mix(in srgb, var(--card) 88%, transparent);
+    backdrop-filter:saturate(180%) blur(22px); -webkit-backdrop-filter:saturate(180%) blur(22px);
+    border-top:1px solid var(--border); padding-bottom:env(safe-area-inset-bottom); height:calc(var(--nav-h) + env(safe-area-inset-bottom)); }
+  nav button { flex:1; background:none; border:none; color:var(--muted); font-size:11px; font-weight:600;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; cursor:pointer; }
+  nav button svg { width:24px; height:24px; stroke:currentColor; fill:none; stroke-width:1.9; }
+  nav button.active { color:var(--accent); }
+
+  /* bottom sheet */
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; z-index:100; align-items:flex-end;
+    animation:dim .2s ease; }
+  @keyframes dim { from{opacity:0} to{opacity:1} }
   .modal.open { display:flex; }
-  .sheet { background:var(--card); width:100%; border-radius:20px 20px 0 0;
-    max-height:90vh; display:flex; flex-direction:column; overflow:hidden; }
+  .sheet { background:var(--card); width:100%; max-width:520px; margin:0 auto; border-radius:24px 24px 0 0;
+    max-height:92vh; display:flex; flex-direction:column; overflow:hidden; animation:rise .28s cubic-bezier(.2,.8,.2,1); }
+  @keyframes rise { from{transform:translateY(100%)} to{transform:none} }
+  .grabber { width:38px; height:5px; border-radius:3px; background:var(--line); margin:9px auto 0; flex-shrink:0; }
   .sheet-head { display:flex; align-items:center; justify-content:space-between; gap:8px;
-    padding:14px 16px; border-bottom:1px solid var(--line); flex-shrink:0; }
-  .sheet-head .head-title { font-weight:600; font-size:17px; }
-  .head-btn { background:none; border:none; color:var(--accent); font-size:16px; padding:6px 4px; }
-  .head-btn.primary { font-weight:700; }
-  .head-btn:disabled { opacity:.4; }
+    padding:8px 16px 12px; border-bottom:1px solid var(--line); flex-shrink:0; }
+  .sheet-head .head-title { font-weight:700; font-size:17px; }
+  .head-btn { background:none; border:none; color:var(--accent); font-size:16px; font-weight:600;
+    padding:8px 4px; cursor:pointer; min-width:60px; text-align:left; }
+  .head-btn.primary { font-weight:800; text-align:right; }
+  .head-btn:disabled { opacity:.35; }
   .sheet-body { flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
-    padding:12px 16px calc(20px + env(safe-area-inset-bottom)); }
-  .sheet-sticky { position:sticky; top:0; background:var(--card); padding:6px 0 10px; z-index:2; }
-  .sheet-sticky .seg { margin-bottom:10px; }
-  .sel-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
-  .chip { background:var(--card2); border:none; color:var(--text); padding:6px 12px; border-radius:8px; font-size:14px; }
-  .seg { display:flex; background:var(--card2); border-radius:10px; padding:3px; margin-bottom:12px; }
-  .seg button { flex:1; border:none; background:none; color:var(--muted); padding:8px; border-radius:8px; font-size:14px; }
-  .seg button.active { background:var(--accent); color:#fff; }
-  .foodrow { display:flex; justify-content:space-between; align-items:center; padding:12px 4px;
-    border-bottom:1px solid var(--line); }
-  .foodrow small { color:var(--muted); font-size:12px; }
-  .foodrow.sel { color:var(--accent); }
-  .sheetbtns { display:flex; gap:10px; margin-top:16px; }
-  .sheetbtns button { flex:1; padding:14px; border-radius:12px; border:none; font-size:16px; font-weight:600; }
-  .btn-primary { background:var(--accent); color:#fff; }
-  .btn-primary:disabled { opacity:.4; }
-  .btn-cancel { background:var(--card2); color:var(--text); }
-  .preview { display:flex; justify-content:space-between; padding:8px 0; }
+    padding:0 16px calc(20px + env(safe-area-inset-bottom)); }
+  .sheet-sticky { position:sticky; top:0; background:var(--card); padding:14px 0 12px; z-index:2; }
+  .seg { display:flex; background:var(--card2); border-radius:12px; padding:4px; margin-bottom:12px; }
+  .seg button { flex:1; border:none; background:none; color:var(--text2); padding:9px; border-radius:9px;
+    font-size:14.5px; font-weight:700; font-family:inherit; cursor:pointer; transition:.15s; }
+  .seg button.active { background:var(--card); color:var(--text); box-shadow:var(--shadow); }
+  .searchbox { position:relative; }
+  .searchbox svg { position:absolute; left:14px; top:50%; transform:translateY(-50%); width:18px; height:18px;
+    stroke:var(--muted); fill:none; stroke-width:2; pointer-events:none; }
+  .searchbox input { padding-left:42px; }
+  .rescount { font-size:12px; color:var(--muted); font-weight:600; margin:2px 2px 0; }
 
-  /* chart */
-  svg text { fill: var(--muted); font-size:10px; }
+  .frow { display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:none;
+    border:none; border-bottom:1px solid var(--line); padding:13px 6px; cursor:pointer; color:inherit; font-family:inherit; }
+  .frow:active { background:var(--card2); }
+  .frow .fn { flex:1; min-width:0; }
+  .frow .fn .t { font-size:15.5px; font-weight:600; }
+  .frow .fn .s { font-size:12px; color:var(--muted); margin-top:1px; }
+  .frow .fm { text-align:right; flex-shrink:0; }
+  .frow .fm .c { font-weight:700; font-variant-numeric:tabular-nums; }
+  .frow .fm .p { font-size:12px; color:var(--muted); }
+
+  .sel-head { display:flex; align-items:center; justify-content:space-between; margin:14px 0 4px; }
+  .sel-head .sn { font-size:19px; font-weight:800; letter-spacing:-.01em; }
+  .chip { background:var(--card2); border:none; color:var(--accent); padding:7px 13px; border-radius:11px;
+    font-size:13px; font-weight:700; cursor:pointer; }
+  .qty { display:flex; align-items:center; gap:10px; }
+  .qty button { width:48px; height:50px; border-radius:13px; border:none; background:var(--card2); color:var(--text);
+    font-size:24px; font-weight:400; cursor:pointer; flex-shrink:0; }
+  .qty button:active { transform:scale(.93); }
+  .qty input { text-align:center; font-size:18px; font-weight:700; }
+  .qty .un { color:var(--muted); font-weight:600; width:34px; }
+  .pvcard { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+  .pv { background:var(--card2); border-radius:14px; padding:14px; text-align:center; }
+  .pv .v { font-size:26px; font-weight:800; letter-spacing:-.02em; }
+  .pv .k { font-size:12px; color:var(--muted); margin-top:2px; }
 </style>
 </head>
 <body>
 
-<header id="title">Profile</header>
+<div class="appbar" id="title">Profile</div>
 
 <!-- PROFILE -->
 <section id="page-profile" class="page active">
   <div class="card">
-    <div class="row">
-      <div><label>Weight (kg)</label><input id="p-weight" type="number" inputmode="decimal"></div>
-      <div><label>Height (cm)</label><input id="p-height" type="number" inputmode="decimal"></div>
+    <div class="card-title">Your details</div>
+    <div class="grid2">
+      <div><label class="fl">Weight (kg)</label><input id="p-weight" type="number" inputmode="decimal"></div>
+      <div><label class="fl">Height (cm)</label><input id="p-height" type="number" inputmode="decimal"></div>
     </div>
-    <div class="row">
-      <div><label>Age</label><input id="p-age" type="number" inputmode="numeric"></div>
-      <div><label>Sex</label><select id="p-sex"><option>Male</option><option>Female</option></select></div>
+    <div class="grid2">
+      <div><label class="fl">Age</label><input id="p-age" type="number" inputmode="numeric"></div>
+      <div><label class="fl">Sex</label><select id="p-sex"><option>Male</option><option>Female</option></select></div>
     </div>
-    <label>Activity level</label>
+    <label class="fl">Activity level</label>
     <select id="p-activity">
       <option value="1.2">Sedentary — little or no exercise</option>
       <option value="1.375">Light — 1–3 days/week</option>
@@ -125,26 +229,29 @@
       <option value="1.725">Active — 6–7 days/week</option>
       <option value="1.9">Very active — hard exercise & job</option>
     </select>
-    <div class="row">
-      <div><label>Daily deficit (kcal)</label><input id="p-deficit" type="number" inputmode="decimal"></div>
-      <div><label>Protein (g/kg)</label><input id="p-ppk" type="number" inputmode="decimal"></div>
+    <div class="grid2">
+      <div><label class="fl">Daily deficit (kcal)</label><input id="p-deficit" type="number" inputmode="decimal"></div>
+      <div><label class="fl">Protein (g/kg)</label><input id="p-ppk" type="number" inputmode="decimal"></div>
+    </div>
+  </div>
+
+  <div class="card hero">
+    <div class="lab">DAILY CALORIE TARGET</div>
+    <div class="big" id="r-target">—</div>
+    <div class="unit">kcal / day</div>
+    <div class="tiles">
+      <div class="tile"><div class="v" id="r-bmr">—</div><div class="k">BMR</div></div>
+      <div class="tile"><div class="v" id="r-maint">—</div><div class="k">Maintenance</div></div>
+      <div class="tile"><div class="v" id="r-protein">—</div><div class="k">Protein/day</div></div>
     </div>
   </div>
 
   <div class="card">
-    <div class="result"><span class="k">BMR</span><span class="v" id="r-bmr">—</span></div>
-    <div class="result"><span class="k">Maintenance</span><span class="v" id="r-maint">—</span></div>
-    <div class="result"><span class="k">Daily target</span><span class="v hl" id="r-target">—</span></div>
-    <div class="result"><span class="k">Protein target</span><span class="v hl" id="r-protein">—</span></div>
-    <div class="hint">Mifflin-St Jeor: BMR = 10·wt + 6.25·ht − 5·age + (5 male / −161 female). Maintenance = BMR × activity. Target = maintenance − deficit.</div>
-  </div>
-
-  <div class="card">
-    <strong>Backup</strong>
-    <div class="hint">Data is stored only on this device. Export a backup file to keep it safe or move it to another device, then Import it there.</div>
-    <div class="sheetbtns">
-      <button class="btn-cancel" onclick="exportData()">Export</button>
-      <button class="btn-primary" onclick="document.getElementById('import-file').click()">Import</button>
+    <div class="card-title">Backup</div>
+    <div class="hint" style="margin-top:0">Data lives only on this device. Export a file to back it up or move it to another phone, then Import it there.</div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn btn-ghost" onclick="exportData()">Export</button>
+      <button class="btn btn-primary" onclick="document.getElementById('import-file').click()">Import</button>
     </div>
     <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importData(event)">
   </div>
@@ -154,18 +261,20 @@
 <section id="page-log" class="page">
   <div class="card">
     <div class="datenav">
-      <button onclick="changeDay(-1)">‹</button>
-      <div class="d"><div class="wk" id="d-wk"></div><div class="dt" id="d-dt"></div></div>
-      <button onclick="changeDay(1)">›</button>
+      <button class="nav-arrow" onclick="changeDay(-1)">‹</button>
+      <div class="datelabel"><div class="wk" id="d-wk"></div><div class="dt" id="d-dt"></div></div>
+      <button class="nav-arrow" onclick="changeDay(1)">›</button>
     </div>
+    <div class="center" id="today-wrap"></div>
   </div>
+
   <div class="card">
     <div class="ringwrap">
-      <svg width="220" height="220" viewBox="0 0 220 220">
-        <circle cx="110" cy="110" r="95" fill="none" stroke="#2c2c34" stroke-width="18"/>
-        <circle id="ring" cx="110" cy="110" r="95" fill="none" stroke="var(--green)" stroke-width="18"
-          stroke-linecap="round" transform="rotate(-90 110 110)"
-          stroke-dasharray="596.9" stroke-dashoffset="596.9"/>
+      <svg width="210" height="210" viewBox="0 0 210 210">
+        <circle cx="105" cy="105" r="90" fill="none" stroke="var(--track)" stroke-width="16"/>
+        <circle id="ring" cx="105" cy="105" r="90" fill="none" stroke="var(--good)" stroke-width="16"
+          stroke-linecap="round" transform="rotate(-90 105 105)"
+          stroke-dasharray="565.5" stroke-dashoffset="565.5" style="transition:stroke-dashoffset .5s ease, stroke .3s"/>
       </svg>
       <div class="ringtext">
         <div class="big" id="ring-cals">0</div>
@@ -173,43 +282,51 @@
         <div class="rem" id="ring-rem"></div>
       </div>
     </div>
-  </div>
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-      <strong>Protein</strong><span id="prot-txt" style="color:var(--muted)">0 / 0 g</span>
+    <div class="macro">
+      <div class="macro-head"><span class="name">Protein</span><span class="val" id="prot-txt">0 / 0 g</span></div>
+      <div class="pbar"><div id="prot-bar" style="width:0%"></div></div>
     </div>
-    <div class="pbar"><div id="prot-bar" style="width:0%"></div></div>
   </div>
+
   <div class="card">
-    <strong>Meals</strong>
+    <div class="card-title">Meals</div>
     <div id="meals"></div>
-    <button class="addbtn" onclick="openAdd()">+ Add meal</button>
   </div>
 </section>
 
 <!-- WEIGHT -->
 <section id="page-weight" class="page">
   <div class="card">
-    <strong>Trend</strong>
+    <div class="wstats">
+      <div class="wstat"><div class="k">Current</div><div class="v" id="w-current">—</div></div>
+      <div class="wstat"><div class="k">Change</div><div class="v delta" id="w-change">—</div></div>
+    </div>
+    <div class="card-title" style="margin-top:6px">Trend</div>
     <div id="chart"></div>
   </div>
   <div class="card">
-    <strong>History</strong>
+    <div class="card-title">History</div>
     <div id="weights"></div>
-    <button class="addbtn" onclick="openWeight()">+ Log weight</button>
   </div>
 </section>
 
+<!-- FAB -->
+<button class="fab" id="fab" onclick="fabAction()">+</button>
+
 <!-- tab bar -->
 <nav>
-  <button id="tab-profile" class="active" onclick="showTab('profile')"><span class="ic">👤</span>Profile</button>
-  <button id="tab-log" onclick="showTab('log')"><span class="ic">🍴</span>Daily Log</button>
-  <button id="tab-weight" onclick="showTab('weight')"><span class="ic">📈</span>Weight</button>
+  <button id="tab-profile" class="active" onclick="showTab('profile')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Profile</button>
+  <button id="tab-log" onclick="showTab('log')">
+    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Daily Log</button>
+  <button id="tab-weight" onclick="showTab('weight')">
+    <svg viewBox="0 0 24 24"><path d="M4 18l5-6 4 3 7-9"/><path d="M4 21h16"/></svg>Weight</button>
 </nav>
 
-<!-- Add meal modal -->
+<!-- Add meal sheet -->
 <div class="modal" id="addModal">
   <div class="sheet">
+    <div class="grabber"></div>
     <div class="sheet-head">
       <button class="head-btn" onclick="closeAdd()">Cancel</button>
       <span class="head-title">Add Meal</span>
@@ -221,39 +338,49 @@
           <button id="seg-search" class="active" onclick="setMode('search')">Search</button>
           <button id="seg-custom" onclick="setMode('custom')">Custom</button>
         </div>
-        <input id="food-q" placeholder="Search food (e.g. chicken, veg roll)" oninput="renderResults()">
+        <div class="searchbox" id="searchbox">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input id="food-q" placeholder="Search 400+ foods (e.g. veg raita)" oninput="renderResults()" autocomplete="off">
+        </div>
+        <div class="rescount" id="rescount"></div>
       </div>
       <div id="results"></div>
       <div id="pick-qty" style="display:none">
-        <div class="sel-head">
-          <strong id="sel-name"></strong>
-          <button class="chip" onclick="clearSel()">↺ Change</button>
+        <div class="sel-head"><span class="sn" id="sel-name"></span>
+          <button class="chip" onclick="clearSel()">↺ Change</button></div>
+        <label class="fl" id="qty-label">Grams</label>
+        <div class="qty">
+          <button onclick="adjustQty(-1)">−</button>
+          <input id="qty" type="number" inputmode="decimal" oninput="renderPreview()">
+          <span class="un" id="qty-unit">g</span>
+          <button onclick="adjustQty(1)">+</button>
         </div>
-        <label id="qty-label">Grams</label>
-        <input id="qty" type="number" inputmode="decimal" oninput="renderPreview()">
-        <div class="preview"><span class="k">Calories</span><strong id="pv-cal">0 kcal</strong></div>
-        <div class="preview"><span class="k">Protein</span><strong id="pv-prot">0 g</strong></div>
+        <div class="pvcard">
+          <div class="pv"><div class="v" id="pv-cal">0</div><div class="k">Calories (kcal)</div></div>
+          <div class="pv"><div class="v" id="pv-prot">0</div><div class="k">Protein (g)</div></div>
+        </div>
       </div>
       <div id="mode-custom" style="display:none">
-        <label>Meal name</label><input id="c-name" placeholder="Meal">
-        <label>Calories (kcal)</label><input id="c-cal" type="number" inputmode="decimal">
-        <label>Protein (g)</label><input id="c-prot" type="number" inputmode="decimal">
+        <label class="fl">Meal name</label><input id="c-name" placeholder="e.g. Homemade sandwich">
+        <label class="fl">Calories (kcal)</label><input id="c-cal" type="number" inputmode="decimal">
+        <label class="fl">Protein (g)</label><input id="c-prot" type="number" inputmode="decimal">
       </div>
     </div>
   </div>
 </div>
 
-<!-- Add weight modal -->
+<!-- Add weight sheet -->
 <div class="modal" id="weightModal">
   <div class="sheet">
+    <div class="grabber"></div>
     <div class="sheet-head">
       <button class="head-btn" onclick="closeWeight()">Cancel</button>
       <span class="head-title">Log Weight</span>
       <button class="head-btn primary" onclick="confirmWeight()">Save</button>
     </div>
     <div class="sheet-body">
-      <label>Weight (kg)</label><input id="w-val" type="number" inputmode="decimal">
-      <label>Date</label><input id="w-date" type="date">
+      <label class="fl">Weight (kg)</label><input id="w-val" type="number" inputmode="decimal">
+      <label class="fl">Date</label><input id="w-date" type="date">
     </div>
   </div>
 </div>
@@ -262,341 +389,194 @@
 // ---------- storage ----------
 const LS = { get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},
              set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)) };
-
 let profile = LS.get('profile', {weight:95, height:172.7, age:30, sex:'Male', activity:1.55, deficit:700, ppk:2.0});
 let foods = LS.get('foods', []);
 let weights = LS.get('weights', []);
 let selectedDate = startOfDay(new Date());
-
+let currentTab = 'profile';
 function saveProfile(){ LS.set('profile', profile); }
 function saveFoods(){ LS.set('foods', foods); }
 function saveWeights(){ LS.set('weights', weights); }
 
-// ---------- food db ----------
-// per 100 g/ml, or per piece. unit: g | ml | pc
-// n=name, c=kcal, p=protein (per 100 g/ml or per piece), u=g|ml|pc, k=extra search keywords
+// ---------- food db (per 100 g/ml, or per piece) ----------
 const FOODS = [
-  // Proteins
-  {n:"Chicken breast (cooked)", c:165, p:31,  u:"g", k:"grilled"},
-  {n:"Chicken thigh (cooked)",  c:209, p:26,  u:"g"},
-  {n:"Chicken curry",           c:180, p:14,  u:"g", k:"gravy"},
-  {n:"Butter chicken",          c:240, p:14,  u:"g", k:"murgh makhani"},
-  {n:"Tandoori chicken",        c:175, p:28,  u:"g"},
-  {n:"Fish (cooked)",           c:200, p:22,  u:"g", k:"machli"},
-  {n:"Salmon (cooked)",         c:208, p:22,  u:"g"},
-  {n:"Tuna (canned)",           c:116, p:26,  u:"g"},
-  {n:"Prawns (cooked)",         c:99,  p:24,  u:"g", k:"shrimp"},
-  {n:"Mutton (cooked)",         c:250, p:25,  u:"g", k:"goat lamb"},
-  {n:"Beef (cooked)",           c:250, p:26,  u:"g"},
-  {n:"Pork (cooked)",           c:242, p:27,  u:"g"},
-  {n:"Egg (large)",             c:78,  p:6.3, u:"pc"},
-  {n:"Egg white",               c:17,  p:3.6, u:"pc", k:"boiled"},
-  {n:"Egg curry",               c:150, p:8,   u:"g"},
-  {n:"Paneer",                  c:265, p:18,  u:"g", k:"cottage cheese"},
-  {n:"Palak paneer",            c:180, p:8,   u:"g", k:"spinach"},
-  {n:"Paneer butter masala",    c:230, p:8,   u:"g", k:"makhani"},
-  {n:"Tofu",                    c:76,  p:8,   u:"g", k:"soy bean curd"},
-  {n:"Soya chunks (dry)",       c:345, p:52,  u:"g", k:"meal maker nutrela"},
-  {n:"Whey protein",            c:400, p:80,  u:"g", k:"powder shake scoop"},
-  {n:"Greek yogurt",            c:59,  p:10,  u:"g"},
+  // Non-veg
+  {n:"Chicken breast (cooked)",c:165,p:31,u:"g",k:"grilled"},{n:"Chicken thigh (cooked)",c:209,p:26,u:"g"},
+  {n:"Chicken curry",c:180,p:14,u:"g",k:"gravy"},{n:"Butter chicken",c:240,p:14,u:"g",k:"murgh makhani"},
+  {n:"Tandoori chicken",c:175,p:28,u:"g"},{n:"Chicken tikka",c:195,p:25,u:"g"},{n:"Chicken 65",c:250,p:18,u:"g"},
+  {n:"Chilli chicken",c:200,p:15,u:"g"},{n:"Chicken manchurian",c:180,p:12,u:"g"},{n:"Chicken keema",c:200,p:18,u:"g",k:"minced mince"},
+  {n:"Chicken leg (roasted)",c:190,p:28,u:"g",k:"drumstick"},{n:"Seekh kebab",c:230,p:18,u:"g",k:"kabab"},
+  {n:"Fish (cooked)",c:200,p:22,u:"g",k:"machli"},{n:"Fish curry",c:130,p:12,u:"g"},{n:"Fish fry",c:250,p:20,u:"g"},
+  {n:"Fish tikka",c:150,p:22,u:"g"},{n:"Salmon (cooked)",c:208,p:22,u:"g"},{n:"Tuna (canned)",c:116,p:26,u:"g"},
+  {n:"Prawns (cooked)",c:99,p:24,u:"g",k:"shrimp"},{n:"Prawn curry",c:140,p:12,u:"g"},{n:"Crab (cooked)",c:97,p:19,u:"g"},
+  {n:"Squid (cooked)",c:92,p:15,u:"g",k:"calamari"},{n:"Mutton (cooked)",c:250,p:25,u:"g",k:"goat lamb"},
+  {n:"Mutton curry",c:200,p:16,u:"g",k:"rogan josh"},{n:"Mutton keema",c:210,p:17,u:"g",k:"minced"},
+  {n:"Lamb chops",c:294,p:25,u:"g"},{n:"Beef (cooked)",c:250,p:26,u:"g"},{n:"Pork (cooked)",c:242,p:27,u:"g"},
+  {n:"Bacon",c:541,p:37,u:"g"},{n:"Sausage",c:300,p:12,u:"g"},{n:"Ham",c:145,p:18,u:"g"},{n:"Salami",c:336,p:22,u:"g"},
+  {n:"Turkey breast",c:135,p:29,u:"g"},{n:"Egg (large)",c:78,p:6.3,u:"pc"},{n:"Egg white",c:17,p:3.6,u:"pc",k:"boiled"},
+  {n:"Boiled egg (whole)",c:155,p:13,u:"g"},{n:"Fried egg",c:90,p:6,u:"pc"},{n:"Omelette",c:154,p:11,u:"g"},
+  {n:"Egg bhurji",c:200,p:13,u:"g",k:"scrambled anda"},{n:"Egg curry",c:150,p:8,u:"g"},{n:"Egg roll",c:250,p:10,u:"pc"},
+  // Paneer / veg protein
+  {n:"Paneer",c:265,p:18,u:"g",k:"cottage cheese"},{n:"Palak paneer",c:180,p:8,u:"g",k:"spinach"},
+  {n:"Paneer butter masala",c:230,p:8,u:"g",k:"makhani"},{n:"Matar paneer",c:180,p:8,u:"g",k:"peas"},
+  {n:"Paneer bhurji",c:220,p:14,u:"g"},{n:"Kadai paneer",c:200,p:10,u:"g"},{n:"Shahi paneer",c:250,p:8,u:"g"},
+  {n:"Malai kofta",c:250,p:6,u:"g"},{n:"Tofu",c:76,p:8,u:"g",k:"soy bean curd"},
+  {n:"Soya chunks (dry)",c:345,p:52,u:"g",k:"meal maker nutrela"},{n:"Veg manchurian",c:180,p:4,u:"g"},
+  {n:"Gobi manchurian",c:190,p:4,u:"g"},{n:"Whey protein",c:400,p:80,u:"g",k:"powder shake scoop"},
+  {n:"Sprout salad",c:100,p:6,u:"g",k:"moong"},
   // Dals & legumes (cooked)
-  {n:"Dal (cooked)",            c:116, p:9,   u:"g", k:"lentil tadka"},
-  {n:"Dal makhani",             c:145, p:6,   u:"g"},
-  {n:"Rajma (cooked)",          c:140, p:8,   u:"g", k:"kidney beans"},
-  {n:"Chole / chana masala",    c:130, p:6,   u:"g", k:"chickpea"},
-  {n:"Boiled chickpeas",        c:164, p:8.9, u:"g", k:"chana kabuli"},
-  {n:"Sambar",                  c:85,  p:3,   u:"g", k:"lentil south indian"},
-  {n:"Green moong (cooked)",    c:105, p:7,   u:"g", k:"mung sprouts"},
-  // Grains, rice & breads
-  {n:"White rice (cooked)",     c:130, p:2.7, u:"g", k:"chawal"},
-  {n:"Brown rice (cooked)",     c:123, p:2.7, u:"g"},
-  {n:"Jeera rice",              c:150, p:3,   u:"g", k:"cumin"},
-  {n:"Veg biryani / pulao",     c:180, p:4,   u:"g", k:"pulav"},
-  {n:"Chicken biryani",         c:200, p:8,   u:"g"},
-  {n:"Roti / chapati",          c:104, p:3,   u:"pc", k:"phulka wheat bread"},
-  {n:"Naan",                    c:260, p:9,   u:"pc"},
-  {n:"Plain paratha",           c:210, p:4,   u:"pc"},
-  {n:"Aloo paratha",            c:300, p:6,   u:"pc", k:"potato"},
-  {n:"Puri",                    c:85,  p:1.5, u:"pc", k:"poori"},
-  {n:"Dosa (plain)",            c:168, p:4,   u:"pc"},
-  {n:"Masala dosa",             c:290, p:5,   u:"pc"},
-  {n:"Idli",                    c:58,  p:2,   u:"pc"},
-  {n:"Medu vada",               c:130, p:3,   u:"pc", k:"vada"},
-  {n:"Upma",                    c:120, p:3,   u:"g"},
-  {n:"Poha",                    c:130, p:2.5, u:"g", k:"flattened rice"},
-  {n:"Khichdi",                 c:120, p:4,   u:"g"},
-  {n:"Pasta (cooked)",          c:131, p:5,   u:"g"},
-  {n:"Noodles (cooked)",        c:138, p:4.5, u:"g", k:"hakka chowmein"},
-  {n:"Maggi (cooked)",          c:150, p:3,   u:"g", k:"instant noodles"},
-  {n:"White bread",             c:265, p:9,   u:"g"},
-  {n:"Brown bread",             c:250, p:12,  u:"g", k:"whole wheat"},
-  {n:"Oats (dry)",              c:389, p:16.9,u:"g"},
-  {n:"Cornflakes",              c:357, p:7,   u:"g"},
+  {n:"Dal (cooked)",c:116,p:9,u:"g",k:"lentil tadka fry"},{n:"Dal makhani",c:145,p:6,u:"g"},
+  {n:"Dal tadka",c:140,p:6,u:"g"},{n:"Dal fry",c:150,p:6,u:"g"},{n:"Toor dal (cooked)",c:120,p:7,u:"g",k:"arhar"},
+  {n:"Chana dal (cooked)",c:120,p:8,u:"g"},{n:"Masoor dal (cooked)",c:115,p:9,u:"g",k:"red lentil"},
+  {n:"Moong dal (cooked)",c:105,p:7,u:"g",k:"green gram"},{n:"Rajma (cooked)",c:140,p:8,u:"g",k:"kidney beans"},
+  {n:"Chole / chana masala",c:130,p:6,u:"g",k:"chickpea"},{n:"Boiled chickpeas",c:164,p:8.9,u:"g",k:"chana kabuli"},
+  {n:"Sambar",c:85,p:3,u:"g",k:"lentil south indian"},{n:"Kadhi",c:90,p:3,u:"g"},{n:"Kadhi pakora",c:130,p:4,u:"g"},
+  {n:"Rasam",c:40,p:1.5,u:"g"},
+  // Veg dishes / sabzi
+  {n:"Mixed veg sabzi",c:90,p:3,u:"g",k:"vegetable curry sabji"},{n:"Aloo gobi",c:120,p:3,u:"g",k:"potato cauliflower"},
+  {n:"Bhindi masala",c:130,p:2.5,u:"g",k:"okra ladyfinger"},{n:"Baingan bharta",c:100,p:2,u:"g",k:"eggplant brinjal"},
+  {n:"Aloo matar",c:120,p:4,u:"g",k:"potato peas"},{n:"Jeera aloo",c:130,p:2.5,u:"g"},{n:"Dum aloo",c:160,p:3,u:"g"},
+  {n:"Aloo methi",c:130,p:3,u:"g",k:"fenugreek"},{n:"Methi sabzi",c:100,p:3,u:"g",k:"fenugreek"},
+  {n:"Veg korma",c:180,p:4,u:"g",k:"navratan"},{n:"Sarson ka saag",c:120,p:4,u:"g",k:"mustard greens"},
+  {n:"Arbi masala",c:140,p:2,u:"g",k:"colocasia taro"},{n:"Undhiyu",c:150,p:4,u:"g"},{n:"Veg kolhapuri",c:150,p:4,u:"g"},
+  {n:"Kadai veg",c:130,p:3,u:"g"},{n:"Chana saag",c:120,p:6,u:"g"},
+  // Raita, curd & sides
+  {n:"Curd / dahi",c:60,p:3.5,u:"g",k:"yogurt"},{n:"Raita (plain)",c:60,p:2,u:"g"},
+  {n:"Vegetable raita",c:70,p:2.5,u:"g",k:"veg mixed"},{n:"Boondi raita",c:120,p:3,u:"g"},
+  {n:"Cucumber raita",c:50,p:2,u:"g",k:"kheera"},{n:"Onion raita",c:60,p:2,u:"g"},{n:"Mint raita",c:55,p:2,u:"g",k:"pudina"},
+  {n:"Green chutney",c:90,p:2,u:"g",k:"mint coriander"},{n:"Coconut chutney",c:130,p:2,u:"g"},
+  {n:"Pickle / achar",c:150,p:1,u:"g"},{n:"Papad",c:370,p:18,u:"g",k:"papadum"},
+  // Rice & grains
+  {n:"White rice (cooked)",c:130,p:2.7,u:"g",k:"chawal"},{n:"Brown rice (cooked)",c:123,p:2.7,u:"g"},
+  {n:"Jeera rice",c:150,p:3,u:"g",k:"cumin"},{n:"Veg biryani / pulao",c:180,p:4,u:"g",k:"pulav"},
+  {n:"Chicken biryani",c:200,p:8,u:"g"},{n:"Mutton biryani",c:220,p:9,u:"g"},{n:"Egg biryani",c:190,p:6,u:"g"},
+  {n:"Veg fried rice",c:165,p:4,u:"g"},{n:"Egg fried rice",c:185,p:6,u:"g"},{n:"Chicken fried rice",c:190,p:9,u:"g"},
+  {n:"Lemon rice",c:160,p:3,u:"g"},{n:"Curd rice",c:130,p:3,u:"g",k:"dahi"},{n:"Tomato rice",c:160,p:3,u:"g"},
+  {n:"Tamarind rice",c:180,p:3,u:"g",k:"puliyodarai imli"},{n:"Bisi bele bath",c:170,p:5,u:"g"},
+  {n:"Quinoa (cooked)",c:120,p:4.4,u:"g"},{n:"Couscous (cooked)",c:112,p:3.8,u:"g"},
+  {n:"Ragi / millet (cooked)",c:120,p:3.5,u:"g",k:"bajra jowar finger"},{n:"Daliya (cooked)",c:150,p:5,u:"g",k:"broken wheat porridge"},
+  {n:"Oats (dry)",c:389,p:16.9,u:"g"},{n:"Muesli",c:360,p:9,u:"g"},{n:"Granola",c:471,p:10,u:"g"},{n:"Cornflakes",c:357,p:7,u:"g"},
+  {n:"Pasta (cooked)",c:131,p:5,u:"g"},{n:"Pasta (white sauce)",c:180,p:6,u:"g",k:"alfredo"},{n:"Pasta (red sauce)",c:150,p:5,u:"g"},
+  {n:"Mac and cheese",c:250,p:9,u:"g"},{n:"Noodles (cooked)",c:138,p:4.5,u:"g",k:"hakka chowmein"},
+  {n:"Schezwan noodles",c:175,p:5,u:"g"},{n:"Maggi (cooked)",c:150,p:3,u:"g",k:"instant noodles"},
+  // Breads
+  {n:"Roti / chapati",c:104,p:3,u:"pc",k:"phulka wheat"},{n:"Tandoori roti",c:120,p:4,u:"pc"},
+  {n:"Naan",c:260,p:9,u:"pc"},{n:"Butter naan",c:300,p:9,u:"pc"},{n:"Garlic naan",c:290,p:9,u:"pc"},
+  {n:"Plain paratha",c:210,p:4,u:"pc"},{n:"Aloo paratha",c:300,p:6,u:"pc",k:"potato"},{n:"Paneer paratha",c:290,p:10,u:"pc"},
+  {n:"Puri",c:85,p:1.5,u:"pc",k:"poori"},{n:"Bhatura",c:330,p:7,u:"pc"},{n:"Kulcha",c:250,p:7,u:"pc"},
+  {n:"Thepla",c:250,p:5,u:"pc"},{n:"Missi roti",c:180,p:6,u:"pc"},{n:"Rumali roti",c:240,p:8,u:"pc"},
+  {n:"Makki di roti",c:250,p:6,u:"pc",k:"corn bread"},{n:"White bread",c:265,p:9,u:"g"},{n:"Brown bread",c:250,p:12,u:"g",k:"whole wheat"},
+  {n:"Multigrain bread",c:250,p:11,u:"g"},{n:"Garlic bread",c:330,p:8,u:"g"},{n:"Buttered toast",c:120,p:2,u:"pc"},
+  {n:"Ladi pav / bun",c:130,p:4,u:"pc"},
+  // South Indian
+  {n:"Dosa (plain)",c:168,p:4,u:"pc"},{n:"Masala dosa",c:290,p:5,u:"pc"},{n:"Rava dosa",c:200,p:4,u:"pc"},
+  {n:"Uttapam",c:150,p:4,u:"pc"},{n:"Appam",c:120,p:2,u:"pc"},{n:"Idli",c:58,p:2,u:"pc"},
+  {n:"Medu vada",c:130,p:3,u:"pc",k:"vada"},{n:"Mysore bonda",c:250,p:4,u:"pc"},{n:"Pongal",c:150,p:4,u:"g"},
+  {n:"Upma",c:120,p:3,u:"g"},{n:"Poha",c:130,p:2.5,u:"g",k:"flattened rice"},{n:"Khichdi",c:120,p:4,u:"g"},
+  {n:"Sabudana khichdi",c:200,p:2,u:"g",k:"sago tapioca"},
   // Snacks & street food
-  {n:"Samosa",                  c:262, p:3.5, u:"pc"},
-  {n:"Veg pakora / bhaji",      c:315, p:6,   u:"g", k:"fritter bhajji"},
-  {n:"Veg roll / kathi roll",   c:200, p:5,   u:"pc", k:"vegetable frankie wrap"},
-  {n:"Chicken roll / kathi roll",c:230,p:12,  u:"pc", k:"frankie wrap"},
-  {n:"Veg spring roll",         c:150, p:3,   u:"pc", k:"vegetable"},
-  {n:"Veg momos",               c:35,  p:1.2, u:"pc", k:"dumpling dimsum vegetable"},
-  {n:"Chicken momos",           c:40,  p:2,   u:"pc", k:"dumpling"},
-  {n:"Pav bhaji",               c:130, p:3,   u:"g"},
-  {n:"Vada pav",                c:290, p:6,   u:"pc"},
-  {n:"Misal pav",               c:160, p:6,   u:"g"},
-  {n:"Dhokla",                  c:160, p:5,   u:"g"},
-  {n:"Veg sandwich",            c:250, p:8,   u:"pc"},
-  {n:"Veg burger",              c:250, p:8,   u:"pc", k:"burger"},
-  {n:"Chicken burger",          c:300, p:17,  u:"pc", k:"burger"},
-  {n:"Pizza",                   c:266, p:11,  u:"g"},
-  {n:"French fries",            c:312, p:3.4, u:"g", k:"fries chips"},
-  {n:"Aloo tikki",              c:150, p:3,   u:"pc", k:"potato patty"},
-  {n:"Bhel puri",               c:200, p:4,   u:"g", k:"chaat"},
-  {n:"Pani puri",               c:18,  p:0.4, u:"pc", k:"golgappa puchka gol gappa"},
+  {n:"Samosa",c:262,p:3.5,u:"pc"},{n:"Kachori",c:300,p:5,u:"pc"},{n:"Veg pakora / bhaji",c:315,p:6,u:"g",k:"fritter bhajji"},
+  {n:"Onion pakora",c:300,p:5,u:"g"},{n:"Paneer pakora",c:280,p:10,u:"g"},{n:"Bread pakora",c:280,p:6,u:"pc"},
+  {n:"Aloo bonda",c:200,p:3,u:"pc"},{n:"Veg cutlet",c:180,p:4,u:"pc"},{n:"Aloo tikki",c:150,p:3,u:"pc",k:"potato patty"},
+  {n:"Veg roll / kathi roll",c:200,p:5,u:"pc",k:"vegetable frankie wrap"},{n:"Chicken roll / kathi roll",c:230,p:12,u:"pc",k:"frankie wrap"},
+  {n:"Veg spring roll",c:150,p:3,u:"pc",k:"vegetable"},{n:"Veg momos",c:35,p:1.2,u:"pc",k:"dumpling dimsum"},
+  {n:"Chicken momos",c:40,p:2,u:"pc",k:"dumpling"},{n:"Veg puff",c:300,p:5,u:"pc",k:"patties"},{n:"Egg puff",c:320,p:8,u:"pc"},
+  {n:"Pav bhaji",c:130,p:3,u:"g"},{n:"Vada pav",c:290,p:6,u:"pc"},{n:"Misal pav",c:160,p:6,u:"g"},{n:"Dabeli",c:250,p:5,u:"pc"},
+  {n:"Dhokla",c:160,p:5,u:"g"},{n:"Khakhra",c:380,p:10,u:"pc"},{n:"Fafda",c:480,p:9,u:"g"},{n:"Dahi vada",c:150,p:4,u:"pc",k:"dahi bhalla"},
+  {n:"Bhel puri",c:200,p:4,u:"g",k:"chaat"},{n:"Pani puri",c:18,p:0.4,u:"pc",k:"golgappa puchka gol gappa"},
+  {n:"Sev puri",c:220,p:4,u:"g",k:"chaat"},{n:"Corn chaat",c:120,p:3,u:"g"},{n:"Fruit chaat",c:90,p:1.5,u:"g"},
+  {n:"Sev",c:500,p:17,u:"g"},{n:"Bhujia",c:540,p:13,u:"g"},{n:"Namkeen / mixture",c:500,p:12,u:"g",k:"farsan"},
+  {n:"Chivda",c:450,p:9,u:"g",k:"poha namkeen"},{n:"Chakli / murukku",c:500,p:9,u:"g"},{n:"Mathri",c:480,p:8,u:"pc"},
+  {n:"Potato chips",c:536,p:7,u:"g",k:"wafers"},{n:"Popcorn",c:387,p:12,u:"g"},{n:"Nachos",c:490,p:7,u:"g"},
+  // Fast food
+  {n:"Pizza",c:266,p:11,u:"g"},{n:"Veg burger",c:250,p:8,u:"pc",k:"burger"},{n:"Chicken burger",c:300,p:17,u:"pc",k:"burger"},
+  {n:"Veg sandwich",c:250,p:8,u:"pc"},{n:"Cheese sandwich",c:300,p:10,u:"pc"},{n:"Grilled sandwich",c:280,p:9,u:"pc"},
+  {n:"Chicken sandwich",c:280,p:16,u:"pc"},{n:"French fries",c:312,p:3.4,u:"g",k:"fries chips"},
+  {n:"Chicken nuggets",c:296,p:15,u:"g"},{n:"Hot dog",c:290,p:11,u:"pc"},{n:"Shawarma",c:250,p:14,u:"pc",k:"roll"},
+  {n:"Falafel",c:333,p:13,u:"g"},{n:"Hummus",c:166,p:8,u:"g"},
+  // Salads & soups
+  {n:"Green salad",c:30,p:1.5,u:"g"},{n:"Caesar salad",c:180,p:6,u:"g"},{n:"Coleslaw",c:150,p:1.5,u:"g"},
+  {n:"Veg soup",c:40,p:1.5,u:"g"},{n:"Tomato soup",c:50,p:1.2,u:"g"},{n:"Sweet corn soup",c:60,p:1.8,u:"g"},
+  {n:"Chicken soup",c:45,p:4,u:"g"},
   // Dairy & fats
-  {n:"Whole milk",              c:61,  p:3.2, u:"ml", k:"doodh"},
-  {n:"Toned milk",              c:56,  p:3.1, u:"ml", k:"low fat"},
-  {n:"Curd / dahi",             c:60,  p:3.5, u:"g", k:"yogurt"},
-  {n:"Buttermilk / chaas",      c:30,  p:1.5, u:"ml", k:"chaas"},
-  {n:"Cheese (cheddar)",        c:402, p:25,  u:"g"},
-  {n:"Butter",                  c:717, p:0.9, u:"g", k:"makhan"},
-  {n:"Ghee",                    c:900, p:0,   u:"g", k:"clarified"},
-  {n:"Cooking oil",             c:884, p:0,   u:"g", k:"olive sunflower vegetable"},
+  {n:"Whole milk",c:61,p:3.2,u:"ml",k:"doodh"},{n:"Toned milk",c:56,p:3.1,u:"ml"},{n:"Skimmed milk",c:34,p:3.4,u:"ml",k:"skim fat free"},
+  {n:"Almond milk",c:15,p:0.5,u:"ml"},{n:"Soy milk",c:54,p:3.3,u:"ml"},{n:"Buttermilk / chaas",c:30,p:1.5,u:"ml"},
+  {n:"Greek yogurt",c:59,p:10,u:"g"},{n:"Flavoured yogurt",c:95,p:4,u:"g"},{n:"Mishti doi",c:150,p:4,u:"g",k:"sweet yogurt"},
+  {n:"Cheese (cheddar)",c:402,p:25,u:"g"},{n:"Mozzarella",c:280,p:22,u:"g"},{n:"Cheese slice",c:60,p:3.5,u:"pc",k:"processed"},
+  {n:"Cottage cheese (low fat)",c:98,p:11,u:"g"},{n:"Butter",c:717,p:0.9,u:"g",k:"makhan"},{n:"Ghee",c:900,p:0,u:"g",k:"clarified"},
+  {n:"Fresh cream",c:340,p:2,u:"g",k:"malai"},{n:"Condensed milk",c:321,p:8,u:"g"},{n:"Cooking oil",c:884,p:0,u:"g",k:"olive sunflower vegetable"},
   // Nuts & seeds
-  {n:"Almonds",                 c:579, p:21,  u:"g", k:"badam"},
-  {n:"Peanuts",                 c:567, p:26,  u:"g", k:"groundnut moongphali"},
-  {n:"Peanut butter",           c:588, p:25,  u:"g"},
-  {n:"Cashews",                 c:553, p:18,  u:"g", k:"kaju"},
-  {n:"Walnuts",                 c:654, p:15,  u:"g", k:"akhrot"},
-  {n:"Chia seeds",              c:486, p:17,  u:"g"},
-  {n:"Dates",                   c:277, p:1.8, u:"g", k:"khajur"},
-  // Fruits & vegetables
-  {n:"Banana",                  c:89,  p:1.1, u:"g", k:"kela"},
-  {n:"Apple",                   c:52,  p:0.3, u:"g", k:"seb"},
-  {n:"Orange",                  c:47,  p:0.9, u:"g", k:"santra"},
-  {n:"Mango",                   c:60,  p:0.8, u:"g", k:"aam"},
-  {n:"Grapes",                  c:69,  p:0.7, u:"g", k:"angoor"},
-  {n:"Watermelon",              c:30,  p:0.6, u:"g", k:"tarbooj"},
-  {n:"Papaya",                  c:43,  p:0.5, u:"g"},
-  {n:"Pomegranate",             c:83,  p:1.7, u:"g", k:"anar"},
-  {n:"Guava",                   c:68,  p:2.6, u:"g", k:"amrud"},
-  {n:"Avocado",                 c:160, p:2,   u:"g"},
-  {n:"Potato (boiled)",         c:87,  p:1.9, u:"g", k:"aloo"},
-  {n:"Sweet potato",            c:86,  p:1.6, u:"g", k:"shakarkandi"},
-  {n:"Broccoli",                c:34,  p:2.8, u:"g"},
-  {n:"Spinach",                 c:23,  p:2.9, u:"g", k:"palak"},
-  {n:"Tomato",                  c:18,  p:0.9, u:"g", k:"tamatar"},
-  {n:"Onion",                   c:40,  p:1.1, u:"g", k:"pyaz"},
-  {n:"Carrot",                  c:41,  p:0.9, u:"g", k:"gajar"},
-  {n:"Cucumber",                c:15,  p:0.7, u:"g", k:"kheera"},
-  {n:"Mixed veg sabzi",         c:90,  p:3,   u:"g", k:"vegetable curry sabji"},
+  {n:"Almonds",c:579,p:21,u:"g",k:"badam"},{n:"Peanuts",c:567,p:26,u:"g",k:"groundnut moongphali"},
+  {n:"Peanut butter",c:588,p:25,u:"g"},{n:"Cashews",c:553,p:18,u:"g",k:"kaju"},{n:"Walnuts",c:654,p:15,u:"g",k:"akhrot"},
+  {n:"Pistachios",c:562,p:20,u:"g",k:"pista"},{n:"Chia seeds",c:486,p:17,u:"g"},{n:"Flax seeds",c:534,p:18,u:"g",k:"alsi"},
+  {n:"Pumpkin seeds",c:559,p:30,u:"g"},{n:"Sunflower seeds",c:584,p:21,u:"g"},{n:"Mixed nuts",c:607,p:20,u:"g"},
+  {n:"Dates",c:277,p:1.8,u:"g",k:"khajur"},{n:"Raisins",c:299,p:3.1,u:"g",k:"kishmish"},{n:"Fig (dried)",c:249,p:3.3,u:"g",k:"anjeer"},
+  // Fruits
+  {n:"Banana",c:89,p:1.1,u:"g",k:"kela"},{n:"Apple",c:52,p:0.3,u:"g",k:"seb"},{n:"Orange",c:47,p:0.9,u:"g",k:"santra"},
+  {n:"Sweet lime",c:43,p:0.8,u:"g",k:"mosambi"},{n:"Mango",c:60,p:0.8,u:"g",k:"aam"},{n:"Grapes",c:69,p:0.7,u:"g",k:"angoor"},
+  {n:"Watermelon",c:30,p:0.6,u:"g",k:"tarbooj"},{n:"Muskmelon",c:34,p:0.8,u:"g",k:"cantaloupe kharbooja"},
+  {n:"Papaya",c:43,p:0.5,u:"g"},{n:"Pineapple",c:50,p:0.5,u:"g",k:"ananas"},{n:"Pomegranate",c:83,p:1.7,u:"g",k:"anar"},
+  {n:"Guava",c:68,p:2.6,u:"g",k:"amrud"},{n:"Pear",c:57,p:0.4,u:"g",k:"nashpati"},{n:"Peach",c:39,p:0.9,u:"g"},
+  {n:"Plum",c:46,p:0.7,u:"g",k:"aloo bukhara"},{n:"Kiwi",c:61,p:1.1,u:"g"},{n:"Strawberry",c:32,p:0.7,u:"g"},
+  {n:"Blueberry",c:57,p:0.7,u:"g"},{n:"Litchi",c:66,p:0.8,u:"g",k:"lychee"},{n:"Custard apple",c:94,p:2.1,u:"g",k:"sitaphal"},
+  {n:"Sapota / chikoo",c:83,p:0.4,u:"g"},{n:"Jackfruit",c:95,p:1.7,u:"g",k:"kathal"},{n:"Amla",c:44,p:0.9,u:"g",k:"gooseberry"},
+  {n:"Avocado",c:160,p:2,u:"g"},{n:"Coconut (fresh)",c:354,p:3.3,u:"g",k:"nariyal"},{n:"Lemon",c:29,p:1.1,u:"g",k:"nimbu"},
+  // Vegetables
+  {n:"Potato (boiled)",c:87,p:1.9,u:"g",k:"aloo"},{n:"Sweet potato",c:86,p:1.6,u:"g",k:"shakarkandi"},
+  {n:"Onion",c:40,p:1.1,u:"g",k:"pyaz"},{n:"Tomato",c:18,p:0.9,u:"g",k:"tamatar"},{n:"Carrot",c:41,p:0.9,u:"g",k:"gajar"},
+  {n:"Cucumber",c:15,p:0.7,u:"g",k:"kheera"},{n:"Broccoli",c:34,p:2.8,u:"g"},{n:"Spinach",c:23,p:2.9,u:"g",k:"palak"},
+  {n:"Cauliflower",c:25,p:1.9,u:"g",k:"gobi"},{n:"Cabbage",c:25,p:1.3,u:"g",k:"patta gobi"},{n:"Green peas",c:81,p:5,u:"g",k:"matar"},
+  {n:"French beans",c:31,p:1.8,u:"g"},{n:"Capsicum",c:20,p:0.9,u:"g",k:"bell pepper shimla mirch"},{n:"Mushroom",c:22,p:3.1,u:"g"},
+  {n:"Beetroot",c:43,p:1.6,u:"g",k:"chukandar"},{n:"Bottle gourd",c:14,p:0.6,u:"g",k:"lauki ghiya"},
+  {n:"Bitter gourd",c:17,p:1,u:"g",k:"karela"},{n:"Pumpkin",c:26,p:1,u:"g",k:"kaddu"},{n:"Radish",c:16,p:0.7,u:"g",k:"mooli"},
+  {n:"Sweet corn",c:86,p:3.2,u:"g",k:"bhutta makka"},{n:"Brinjal",c:25,p:1,u:"g",k:"eggplant baingan"},
+  {n:"Okra",c:33,p:1.9,u:"g",k:"bhindi ladyfinger"},{n:"Ridge gourd",c:20,p:0.5,u:"g",k:"turai"},
   // Beverages
-  {n:"Black coffee",            c:1,   p:0.1, u:"ml"},
-  {n:"Filter coffee",           c:60,  p:1.5, u:"ml", k:"south indian"},
-  {n:"Masala chai",             c:65,  p:1.5, u:"ml", k:"tea milk"},
-  {n:"Green tea",               c:1,   p:0,   u:"ml"},
-  {n:"Orange juice",            c:45,  p:0.7, u:"ml"},
-  {n:"Coconut water",           c:19,  p:0.7, u:"ml", k:"nariyal"},
-  {n:"Lassi (sweet)",           c:110, p:2.5, u:"ml"},
-  {n:"Soft drink / cola",       c:42,  p:0,   u:"ml", k:"soda coke pepsi"},
-  {n:"Beer",                    c:43,  p:0.5, u:"ml"},
-  {n:"Wine",                    c:83,  p:0.1, u:"ml"},
+  {n:"Black coffee",c:1,p:0.1,u:"ml"},{n:"Filter coffee",c:60,p:1.5,u:"ml",k:"south indian"},{n:"Cappuccino",c:40,p:1.9,u:"ml"},
+  {n:"Latte",c:55,p:3,u:"ml"},{n:"Cold coffee",c:90,p:2.5,u:"ml"},{n:"Masala chai",c:65,p:1.5,u:"ml",k:"tea milk"},
+  {n:"Black tea",c:1,p:0,u:"ml",k:"chai no milk"},{n:"Green tea",c:1,p:0,u:"ml"},{n:"Lemon tea",c:15,p:0,u:"ml"},
+  {n:"Hot chocolate",c:90,p:3,u:"ml"},{n:"Badam milk",c:120,p:4,u:"ml",k:"almond"},{n:"Milkshake",c:110,p:3,u:"ml"},
+  {n:"Mango shake",c:100,p:2.5,u:"ml"},{n:"Lassi (sweet)",c:110,p:2.5,u:"ml"},{n:"Orange juice",c:45,p:0.7,u:"ml"},
+  {n:"Packaged juice",c:50,p:0.3,u:"ml"},{n:"Coconut water",c:19,p:0.7,u:"ml",k:"nariyal"},{n:"Sugarcane juice",c:40,p:0.2,u:"ml",k:"ganne ka ras"},
+  {n:"Nimbu pani",c:25,p:0.1,u:"ml",k:"lemonade shikanji"},{n:"Aam panna",c:60,p:0.3,u:"ml"},{n:"Sharbat / rooh afza",c:90,p:0,u:"ml",k:"rose"},
+  {n:"Soft drink / cola",c:42,p:0,u:"ml",k:"soda coke pepsi thums up"},{n:"Energy drink",c:45,p:0,u:"ml",k:"red bull"},
+  {n:"Smoothie",c:80,p:2,u:"ml"},{n:"Beer",c:43,p:0.5,u:"ml"},{n:"Wine",c:83,p:0.1,u:"ml"},{n:"Whiskey / spirits",c:250,p:0,u:"ml",k:"vodka rum gin"},
   // Sweets & desserts
-  {n:"Gulab jamun",             c:150, p:2,   u:"pc"},
-  {n:"Jalebi",                  c:50,  p:0.5, u:"pc"},
-  {n:"Rasgulla",                c:106, p:2,   u:"pc"},
-  {n:"Kheer",                   c:130, p:3,   u:"g", k:"payasam"},
-  {n:"Gajar halwa",             c:350, p:4,   u:"g", k:"carrot halwa"},
-  {n:"Laddu",                   c:185, p:3,   u:"pc", k:"ladoo"},
-  {n:"Barfi",                   c:350, p:6,   u:"g", k:"burfi"},
-  {n:"Ice cream",               c:207, p:3.5, u:"g"},
-  {n:"Dark chocolate",          c:546, p:7.8, u:"g"},
-  {n:"Biscuit",                 c:20,  p:0.3, u:"pc", k:"cookie marie"},
-  // More non-veg
-  {n:"Chicken leg (roasted)",   c:190, p:28,  u:"g", k:"drumstick"},
-  {n:"Chicken keema",           c:200, p:18,  u:"g", k:"minced mince"},
-  {n:"Chicken tikka",           c:195, p:25,  u:"g"},
-  {n:"Seekh kebab",             c:230, p:18,  u:"g", k:"kabab"},
-  {n:"Fish curry",              c:130, p:12,  u:"g"},
-  {n:"Fish fry",                c:250, p:20,  u:"g"},
-  {n:"Fish tikka",              c:150, p:22,  u:"g"},
-  {n:"Crab (cooked)",           c:97,  p:19,  u:"g"},
-  {n:"Squid (cooked)",          c:92,  p:15,  u:"g", k:"calamari"},
-  {n:"Bacon",                   c:541, p:37,  u:"g"},
-  {n:"Sausage",                 c:300, p:12,  u:"g"},
-  {n:"Ham",                     c:145, p:18,  u:"g"},
-  {n:"Salami",                  c:336, p:22,  u:"g"},
-  {n:"Turkey breast",           c:135, p:29,  u:"g"},
-  {n:"Lamb chops",              c:294, p:25,  u:"g"},
-  {n:"Omelette",                c:154, p:11,  u:"g"},
-  {n:"Egg bhurji",              c:200, p:13,  u:"g", k:"scrambled anda"},
-  {n:"Boiled egg (whole)",      c:155, p:13,  u:"g"},
-  // More dairy & paneer
-  {n:"Skimmed milk",            c:34,  p:3.4, u:"ml", k:"skim fat free"},
-  {n:"Almond milk",             c:15,  p:0.5, u:"ml"},
-  {n:"Soy milk",                c:54,  p:3.3, u:"ml"},
-  {n:"Condensed milk",          c:321, p:8,   u:"g"},
-  {n:"Fresh cream",             c:340, p:2,   u:"g", k:"malai"},
-  {n:"Mozzarella",              c:280, p:22,  u:"g"},
-  {n:"Cottage cheese (low fat)",c:98,  p:11,  u:"g"},
-  {n:"Cheese slice",            c:60,  p:3.5, u:"pc", k:"processed"},
-  {n:"Paneer bhurji",           c:220, p:14,  u:"g"},
-  {n:"Malai kofta",             c:250, p:6,   u:"g"},
-  {n:"Matar paneer",            c:180, p:8,   u:"g", k:"peas"},
-  {n:"Shrikhand",               c:250, p:6,   u:"g"},
-  {n:"Flavoured yogurt",        c:95,  p:4,   u:"g"},
-  // More breads & grains
-  {n:"Bhatura",                 c:330, p:7,   u:"pc"},
-  {n:"Kulcha",                  c:250, p:7,   u:"pc"},
-  {n:"Thepla",                  c:250, p:5,   u:"pc"},
-  {n:"Missi roti",              c:180, p:6,   u:"pc"},
-  {n:"Rumali roti",             c:240, p:8,   u:"pc"},
-  {n:"Multigrain bread",        c:250, p:11,  u:"g"},
-  {n:"Garlic bread",            c:330, p:8,   u:"g"},
-  {n:"Appam",                   c:120, p:2,   u:"pc"},
-  {n:"Uttapam",                 c:150, p:4,   u:"pc"},
-  {n:"Rava dosa",               c:200, p:4,   u:"pc"},
-  {n:"Pongal",                  c:150, p:4,   u:"g"},
-  {n:"Lemon rice",              c:160, p:3,   u:"g"},
-  {n:"Curd rice",               c:130, p:3,   u:"g", k:"dahi"},
-  {n:"Veg fried rice",          c:165, p:4,   u:"g"},
-  {n:"Egg fried rice",          c:185, p:6,   u:"g"},
-  {n:"Chicken fried rice",      c:190, p:9,   u:"g"},
-  {n:"Schezwan noodles",        c:175, p:5,   u:"g"},
-  {n:"Quinoa (cooked)",         c:120, p:4.4, u:"g"},
-  {n:"Couscous (cooked)",       c:112, p:3.8, u:"g"},
-  {n:"Ragi / millet (cooked)",  c:120, p:3.5, u:"g", k:"bajra jowar finger"},
-  {n:"Daliya (cooked)",         c:150, p:5,   u:"g", k:"broken wheat porridge"},
-  {n:"Muesli",                  c:360, p:9,   u:"g"},
-  {n:"Granola",                 c:471, p:10,  u:"g"},
-  {n:"Pancake",                 c:227, p:6,   u:"pc"},
-  {n:"Waffle",                  c:290, p:7,   u:"pc"},
-  {n:"Sabudana khichdi",        c:200, p:2,   u:"g", k:"sago tapioca"},
-  // More dals & veg dishes
-  {n:"Toor dal (cooked)",       c:120, p:7,   u:"g", k:"arhar"},
-  {n:"Chana dal (cooked)",      c:120, p:8,   u:"g"},
-  {n:"Masoor dal (cooked)",     c:115, p:9,   u:"g", k:"red lentil"},
-  {n:"Kadhi",                   c:90,  p:3,   u:"g"},
-  {n:"Aloo gobi",               c:120, p:3,   u:"g", k:"potato cauliflower"},
-  {n:"Bhindi masala",           c:130, p:2.5, u:"g", k:"okra ladyfinger"},
-  {n:"Baingan bharta",          c:100, p:2,   u:"g", k:"eggplant brinjal"},
-  {n:"Aloo matar",              c:120, p:4,   u:"g", k:"potato peas"},
-  {n:"Veg kolhapuri",           c:150, p:4,   u:"g"},
-  {n:"Undhiyu",                 c:150, p:4,   u:"g"},
-  // More snacks & fast food
-  {n:"Kachori",                 c:300, p:5,   u:"pc"},
-  {n:"Dahi vada",               c:150, p:4,   u:"pc", k:"dahi bhalla"},
-  {n:"Sev",                     c:500, p:17,  u:"g"},
-  {n:"Namkeen / mixture",       c:500, p:12,  u:"g"},
-  {n:"Bhujia",                  c:540, p:13,  u:"g"},
-  {n:"Chakli / murukku",        c:500, p:9,   u:"g"},
-  {n:"Potato chips",            c:536, p:7,   u:"g", k:"wafers"},
-  {n:"Popcorn",                 c:387, p:12,  u:"g"},
-  {n:"Nachos",                  c:490, p:7,   u:"g"},
-  {n:"Cheese sandwich",         c:300, p:10,  u:"pc"},
-  {n:"Grilled sandwich",        c:280, p:9,   u:"pc"},
-  {n:"Bread pakora",            c:280, p:6,   u:"pc"},
-  {n:"Veg cutlet",              c:180, p:4,   u:"pc"},
-  {n:"Chicken nuggets",         c:296, p:15,  u:"g"},
-  {n:"Hot dog",                 c:290, p:11,  u:"pc"},
-  {n:"Shawarma",                c:250, p:14,  u:"pc", k:"roll"},
-  {n:"Falafel",                 c:333, p:13,  u:"g"},
-  {n:"Hummus",                  c:166, p:8,   u:"g"},
-  {n:"Pasta (white sauce)",     c:180, p:6,   u:"g", k:"alfredo"},
-  {n:"Pasta (red sauce)",       c:150, p:5,   u:"g", k:"arrabbiata"},
-  {n:"Mac and cheese",          c:250, p:9,   u:"g"},
-  // More fruits
-  {n:"Pineapple",               c:50,  p:0.5, u:"g", k:"ananas"},
-  {n:"Strawberry",              c:32,  p:0.7, u:"g"},
-  {n:"Blueberry",               c:57,  p:0.7, u:"g"},
-  {n:"Kiwi",                    c:61,  p:1.1, u:"g"},
-  {n:"Pear",                    c:57,  p:0.4, u:"g", k:"nashpati"},
-  {n:"Peach",                   c:39,  p:0.9, u:"g"},
-  {n:"Plum",                    c:46,  p:0.7, u:"g", k:"aloo bukhara"},
-  {n:"Litchi",                  c:66,  p:0.8, u:"g", k:"lychee"},
-  {n:"Custard apple",           c:94,  p:2.1, u:"g", k:"sitaphal"},
-  {n:"Sapota / chikoo",         c:83,  p:0.4, u:"g"},
-  {n:"Muskmelon",               c:34,  p:0.8, u:"g", k:"cantaloupe kharbooja"},
-  {n:"Jackfruit",               c:95,  p:1.7, u:"g", k:"kathal"},
-  {n:"Raisins",                 c:299, p:3.1, u:"g", k:"kishmish"},
-  {n:"Fig (dried)",             c:249, p:3.3, u:"g", k:"anjeer"},
-  {n:"Coconut (fresh)",         c:354, p:3.3, u:"g", k:"nariyal"},
-  {n:"Lemon",                   c:29,  p:1.1, u:"g", k:"nimbu"},
-  // More vegetables
-  {n:"Cauliflower",             c:25,  p:1.9, u:"g", k:"gobi"},
-  {n:"Cabbage",                 c:25,  p:1.3, u:"g", k:"patta gobi"},
-  {n:"Green peas",              c:81,  p:5,   u:"g", k:"matar"},
-  {n:"French beans",            c:31,  p:1.8, u:"g"},
-  {n:"Capsicum",                c:20,  p:0.9, u:"g", k:"bell pepper shimla mirch"},
-  {n:"Mushroom",                c:22,  p:3.1, u:"g"},
-  {n:"Beetroot",                c:43,  p:1.6, u:"g", k:"chukandar"},
-  {n:"Bottle gourd",            c:14,  p:0.6, u:"g", k:"lauki ghiya"},
-  {n:"Bitter gourd",            c:17,  p:1,   u:"g", k:"karela"},
-  {n:"Pumpkin",                 c:26,  p:1,   u:"g", k:"kaddu"},
-  {n:"Radish",                  c:16,  p:0.7, u:"g", k:"mooli"},
-  {n:"Sweet corn",              c:86,  p:3.2, u:"g", k:"bhutta makka"},
-  // More beverages
-  {n:"Black tea (no milk)",     c:1,   p:0,   u:"ml", k:"chai"},
-  {n:"Cappuccino",              c:40,  p:1.9, u:"ml"},
-  {n:"Latte",                   c:55,  p:3,   u:"ml"},
-  {n:"Cold coffee",             c:90,  p:2.5, u:"ml"},
-  {n:"Milkshake",               c:110, p:3,   u:"ml"},
-  {n:"Mango shake",             c:100, p:2.5, u:"ml"},
-  {n:"Hot chocolate",           c:90,  p:3,   u:"ml"},
-  {n:"Energy drink",            c:45,  p:0,   u:"ml", k:"red bull"},
-  {n:"Packaged juice",          c:50,  p:0.3, u:"ml"},
-  {n:"Nimbu pani",              c:25,  p:0.1, u:"ml", k:"lemonade shikanji"},
-  {n:"Sugarcane juice",         c:40,  p:0.2, u:"ml", k:"ganne ka ras"},
-  {n:"Whiskey / spirits",       c:250, p:0,   u:"ml", k:"vodka rum gin"},
-  {n:"Coconut milk",            c:230, p:2.3, u:"ml"},
-  // More sweets
-  {n:"Rasmalai",                c:190, p:5,   u:"pc"},
-  {n:"Kaju katli",              c:500, p:9,   u:"g"},
-  {n:"Soan papdi",              c:450, p:5,   u:"g"},
-  {n:"Suji halwa",              c:320, p:5,   u:"g", k:"semolina sheera"},
-  {n:"Modak",                   c:180, p:3,   u:"pc"},
-  {n:"Peda",                    c:380, p:6,   u:"pc"},
-  {n:"Kulfi",                   c:200, p:4,   u:"pc"},
-  {n:"Chikki",                  c:450, p:10,  u:"g", k:"peanut brittle gajak"},
-  {n:"Sponge cake",             c:350, p:5,   u:"g"},
-  {n:"Pastry",                  c:350, p:4,   u:"pc"},
-  {n:"Donut",                   c:452, p:5,   u:"pc", k:"doughnut"},
-  {n:"Muffin",                  c:380, p:6,   u:"pc"},
-  {n:"Brownie",                 c:466, p:6,   u:"pc"},
-  {n:"Milk chocolate",          c:535, p:7.6, u:"g"},
-  {n:"Honey",                   c:304, p:0.3, u:"g", k:"shahad"},
-  {n:"Sugar",                   c:387, p:0,   u:"g", k:"cheeni"},
-  {n:"Jaggery",                 c:383, p:0.4, u:"g", k:"gur"},
-  // Condiments, sides & soups
-  {n:"Tomato ketchup",          c:100, p:1.3, u:"g", k:"sauce"},
-  {n:"Mayonnaise",              c:680, p:1,   u:"g"},
-  {n:"Green chutney",           c:90,  p:2,   u:"g", k:"mint coriander"},
-  {n:"Coconut chutney",         c:130, p:2,   u:"g"},
-  {n:"Pickle / achar",          c:150, p:1,   u:"g"},
-  {n:"Papad",                   c:370, p:18,  u:"g", k:"papadum"},
-  {n:"Raita",                   c:60,  p:2,   u:"g"},
-  {n:"Rasam",                   c:40,  p:1.5, u:"g"},
-  {n:"Veg soup",                c:40,  p:1.5, u:"g"},
-  {n:"Tomato soup",             c:50,  p:1.2, u:"g"},
-  {n:"Sweet corn soup",         c:60,  p:1.8, u:"g"},
-  {n:"Chicken soup",            c:45,  p:4,   u:"g"},
+  {n:"Gulab jamun",c:150,p:2,u:"pc"},{n:"Jalebi",c:50,p:0.5,u:"pc"},{n:"Imarti",c:320,p:2,u:"pc"},{n:"Malpua",c:350,p:4,u:"pc"},
+  {n:"Rasgulla",c:106,p:2,u:"pc"},{n:"Rasmalai",c:190,p:5,u:"pc"},{n:"Cham cham",c:240,p:5,u:"pc"},{n:"Sandesh",c:220,p:8,u:"pc"},
+  {n:"Kheer",c:130,p:3,u:"g",k:"payasam"},{n:"Rabri",c:300,p:7,u:"g"},{n:"Basundi",c:220,p:6,u:"g"},{n:"Custard",c:120,p:3,u:"g"},
+  {n:"Gajar halwa",c:350,p:4,u:"g",k:"carrot halwa"},{n:"Suji halwa",c:320,p:5,u:"g",k:"semolina sheera"},{n:"Moong dal halwa",c:400,p:8,u:"g"},
+  {n:"Laddu (besan)",c:480,p:8,u:"pc",k:"ladoo"},{n:"Motichoor ladoo",c:400,p:6,u:"pc"},{n:"Barfi",c:350,p:6,u:"g",k:"burfi"},
+  {n:"Kaju katli",c:500,p:9,u:"g"},{n:"Kalakand",c:350,p:9,u:"g"},{n:"Milk cake",c:380,p:7,u:"g"},{n:"Soan papdi",c:450,p:5,u:"g"},
+  {n:"Peda",c:380,p:6,u:"pc"},{n:"Modak",c:180,p:3,u:"pc"},{n:"Balushahi",c:400,p:4,u:"pc"},{n:"Ghevar",c:400,p:5,u:"g"},
+  {n:"Petha",c:130,p:0.2,u:"g"},{n:"Chikki",c:450,p:10,u:"g",k:"peanut brittle gajak"},{n:"Kulfi",c:200,p:4,u:"pc"},
+  {n:"Ice cream",c:207,p:3.5,u:"g"},{n:"Sponge cake",c:350,p:5,u:"g"},{n:"Pastry",c:350,p:4,u:"pc"},{n:"Donut",c:452,p:5,u:"pc",k:"doughnut"},
+  {n:"Muffin",c:380,p:6,u:"pc"},{n:"Brownie",c:466,p:6,u:"pc"},{n:"Cookies",c:480,p:6,u:"g"},{n:"Biscuit",c:20,p:0.3,u:"pc",k:"marie"},
+  {n:"Dark chocolate",c:546,p:7.8,u:"g"},{n:"Milk chocolate",c:535,p:7.6,u:"g"},
+  // Staples & condiments (raw)
+  {n:"Wheat flour (atta)",c:340,p:12,u:"g"},{n:"Maida (refined flour)",c:364,p:10,u:"g"},{n:"Besan (gram flour)",c:387,p:22,u:"g"},
+  {n:"Rice (raw)",c:360,p:6.8,u:"g"},{n:"Suji / semolina (raw)",c:360,p:12,u:"g"},{n:"Sugar",c:387,p:0,u:"g",k:"cheeni"},
+  {n:"Jaggery",c:383,p:0.4,u:"g",k:"gur"},{n:"Honey",c:304,p:0.3,u:"g",k:"shahad"},{n:"Tomato ketchup",c:100,p:1.3,u:"g",k:"sauce"},
+  {n:"Mayonnaise",c:680,p:1,u:"g"},{n:"Soy sauce",c:53,p:8,u:"g"},
 ];
-const unitInfo = { g:{basis:100,label:"Grams",def:100,suffix:"g",b:"100 g"},
-                   ml:{basis:100,label:"Millilitres",def:250,suffix:"ml",b:"100 ml"},
-                   pc:{basis:1,label:"Number of pieces",def:1,suffix:"pc",b:"piece"} };
+const unitInfo = { g:{basis:100,label:"Grams",def:100,step:10,suffix:"g",b:"per 100 g"},
+                   ml:{basis:100,label:"Millilitres",def:250,step:10,suffix:"ml",b:"per 100 ml"},
+                   pc:{basis:1,label:"Quantity",def:1,step:1,suffix:"pc",b:"per piece"} };
 
 // ---------- helpers ----------
 function startOfDay(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
 function sameDay(a,b){ return startOfDay(new Date(a)).getTime()===startOfDay(b).getTime(); }
 function num(v){ const n=parseFloat(v); return isNaN(n)?0:n; }
 function round(n){ return Math.round(n); }
+function uid(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
 // ---------- profile ----------
 function bindProfile(){
-  const map = {'p-weight':'weight','p-height':'height','p-age':'age','p-deficit':'deficit','p-ppk':'ppk'};
+  const map={'p-weight':'weight','p-height':'height','p-age':'age','p-deficit':'deficit','p-ppk':'ppk'};
   for(const [id,key] of Object.entries(map)){
-    const el = document.getElementById(id);
-    el.value = profile[key];
-    el.addEventListener('input', ()=>{ profile[key]=num(el.value); saveProfile(); renderProfile(); renderLog(); });
+    const el=document.getElementById(id); el.value=profile[key];
+    el.addEventListener('input',()=>{ profile[key]=num(el.value); saveProfile(); renderProfile(); renderLog(); });
   }
   const sex=document.getElementById('p-sex'); sex.value=profile.sex;
   sex.onchange=()=>{ profile.sex=sex.value; saveProfile(); renderProfile(); };
@@ -604,136 +584,121 @@ function bindProfile(){
   act.onchange=()=>{ profile.activity=num(act.value); saveProfile(); renderProfile(); renderLog(); };
 }
 function calc(){
-  const s = profile.sex==='Male'?5:-161;
-  const bmr = 10*profile.weight + 6.25*profile.height - 5*profile.age + s;
-  const maint = bmr*profile.activity;
-  return { bmr, maint, target: maint-profile.deficit, protein: profile.weight*profile.ppk };
+  const s=profile.sex==='Male'?5:-161;
+  const bmr=10*profile.weight+6.25*profile.height-5*profile.age+s;
+  const maint=bmr*profile.activity;
+  return { bmr, maint, target:maint-profile.deficit, protein:profile.weight*profile.ppk };
 }
 function renderProfile(){
   const c=calc();
-  document.getElementById('r-bmr').textContent = round(c.bmr)+' kcal';
-  document.getElementById('r-maint').textContent = round(c.maint)+' kcal';
-  document.getElementById('r-target').textContent = round(c.target)+' kcal';
-  document.getElementById('r-protein').textContent = round(c.protein)+' g';
+  document.getElementById('r-target').textContent=round(c.target);
+  document.getElementById('r-bmr').textContent=round(c.bmr);
+  document.getElementById('r-maint').textContent=round(c.maint);
+  document.getElementById('r-protein').textContent=round(c.protein)+'g';
 }
 
 // ---------- daily log ----------
 function changeDay(delta){ const d=new Date(selectedDate); d.setDate(d.getDate()+delta); selectedDate=startOfDay(d); renderLog(); }
+function goToday(){ selectedDate=startOfDay(new Date()); renderLog(); }
 function renderLog(){
-  document.getElementById('d-wk').textContent = selectedDate.toLocaleDateString(undefined,{weekday:'long'});
-  document.getElementById('d-dt').textContent = selectedDate.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
-  const day = foods.filter(f=>sameDay(f.date, selectedDate));
-  const cals = day.reduce((s,f)=>s+f.calories,0);
-  const prot = day.reduce((s,f)=>s+f.protein,0);
-  const c = calc();
-  // ring
-  const prog = c.target>0 ? cals/c.target : 0;
-  const circ = 2*Math.PI*95;
-  const ring = document.getElementById('ring');
+  document.getElementById('d-wk').textContent=selectedDate.toLocaleDateString(undefined,{weekday:'long'});
+  document.getElementById('d-dt').textContent=selectedDate.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+  const isToday=sameDay(selectedDate,new Date());
+  document.getElementById('today-wrap').innerHTML=isToday?'':'<button class="today-pill" onclick="goToday()">Jump to Today</button>';
+  const day=foods.filter(f=>sameDay(f.date,selectedDate));
+  const cals=day.reduce((s,f)=>s+f.calories,0), prot=day.reduce((s,f)=>s+f.protein,0);
+  const c=calc();
+  const prog=c.target>0?cals/c.target:0, circ=2*Math.PI*90;
+  const ring=document.getElementById('ring');
   ring.setAttribute('stroke-dashoffset', circ*(1-Math.min(prog,1)));
-  ring.setAttribute('stroke', prog>1 ? 'var(--red)' : 'var(--green)');
-  document.getElementById('ring-cals').textContent = round(cals);
-  document.getElementById('ring-target').textContent = 'of '+round(c.target)+' kcal';
-  const rem = c.target-cals;
-  const remEl = document.getElementById('ring-rem');
-  remEl.textContent = rem>=0 ? round(rem)+' left' : round(-rem)+' over';
-  remEl.style.color = rem>=0 ? 'var(--green)' : 'var(--red)';
-  // protein
-  document.getElementById('prot-txt').textContent = round(prot)+' / '+round(c.protein)+' g';
-  document.getElementById('prot-bar').style.width = Math.min(c.protein>0?prot/c.protein*100:0,100)+'%';
-  // meals
+  ring.setAttribute('stroke', prog>1?'var(--crit)':'var(--good)');
+  document.getElementById('ring-cals').textContent=round(cals);
+  document.getElementById('ring-target').textContent='of '+round(c.target)+' kcal';
+  const rem=c.target-cals, remEl=document.getElementById('ring-rem');
+  remEl.textContent=rem>=0?round(rem)+' kcal left':round(-rem)+' kcal over';
+  remEl.style.color=rem>=0?'var(--good)':'var(--crit)';
+  document.getElementById('prot-txt').textContent=round(prot)+' / '+round(c.protein)+' g';
+  document.getElementById('prot-bar').style.width=Math.min(c.protein>0?prot/c.protein*100:0,100)+'%';
   const box=document.getElementById('meals');
-  if(day.length===0){ box.innerHTML='<div class="empty">No meals logged yet.</div>'; return; }
-  box.innerHTML = day.map(f=>`<div class="meal">
-      <div class="nm">${escapeHtml(f.name)}<small>${round(f.protein)} g protein</small></div>
+  if(day.length===0){ box.innerHTML='<div class="empty">No meals yet.<br>Tap + to add one.</div>'; return; }
+  box.innerHTML=day.map(f=>`<div class="meal">
+      <div class="nm"><div class="t">${escapeHtml(f.name)}</div><small>${round(f.protein)} g protein</small></div>
       <div class="cal">${round(f.calories)} kcal</div>
-      <button class="del" onclick="deleteFood('${f.id}')">🗑</button>
-    </div>`).join('');
+      <button class="del" onclick="deleteFood('${f.id}')" aria-label="Delete">✕</button></div>`).join('');
 }
 function deleteFood(id){ foods=foods.filter(f=>f.id!==id); saveFoods(); renderLog(); }
-function escapeHtml(s){ return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
-// ---------- add meal modal ----------
+// ---------- add meal sheet ----------
 let mode='search', sel=null;
 function scrollSheetTop(){ const b=document.getElementById('sheet-body'); if(b) b.scrollTop=0; }
 function openAdd(){
   mode='search'; sel=null;
-  document.getElementById('food-q').value='';
-  document.getElementById('qty').value='';
-  document.getElementById('c-name').value='';
-  document.getElementById('c-cal').value='';
-  document.getElementById('c-prot').value='';
+  ['food-q','qty','c-name','c-cal','c-prot'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('seg-search').classList.add('active');
   document.getElementById('seg-custom').classList.remove('active');
   renderResults(); updateSearchView(); updateConfirm();
-  document.getElementById('addModal').classList.add('open');
-  scrollSheetTop();
+  document.getElementById('addModal').classList.add('open'); scrollSheetTop();
 }
 function closeAdd(){ document.getElementById('addModal').classList.remove('open'); }
 function setMode(m){
   mode=m; sel=null;
-  document.getElementById('seg-search').classList.toggle('active', m==='search');
-  document.getElementById('seg-custom').classList.toggle('active', m==='custom');
+  document.getElementById('seg-search').classList.toggle('active',m==='search');
+  document.getElementById('seg-custom').classList.toggle('active',m==='custom');
   if(m==='search') renderResults();
   updateSearchView(); updateConfirm(); scrollSheetTop();
 }
 function updateSearchView(){
-  const searchMode = (mode==='search');
-  document.getElementById('food-q').style.display   = (searchMode && !sel) ? 'block':'none';
-  document.getElementById('results').style.display  = (searchMode && !sel) ? 'block':'none';
-  document.getElementById('pick-qty').style.display = (searchMode && sel)  ? 'block':'none';
-  document.getElementById('mode-custom').style.display = (!searchMode) ? 'block':'none';
+  const s=(mode==='search');
+  document.getElementById('searchbox').style.display=(s&&!sel)?'block':'none';
+  document.getElementById('rescount').style.display=(s&&!sel)?'block':'none';
+  document.getElementById('results').style.display=(s&&!sel)?'block':'none';
+  document.getElementById('pick-qty').style.display=(s&&sel)?'block':'none';
+  document.getElementById('mode-custom').style.display=(!s)?'block':'none';
 }
-function foodMatches(f, tokens){
-  const hay = (f.n + ' ' + (f.k||'')).toLowerCase();
-  return tokens.every(t => hay.includes(t));
-}
+function foodMatches(f,tokens){ const h=(f.n+' '+(f.k||'')).toLowerCase(); return tokens.every(t=>h.includes(t)); }
 function renderResults(){
   const q=document.getElementById('food-q').value.trim().toLowerCase();
-  const tokens = q.split(/\s+/).filter(Boolean);
-  const list = (tokens.length===0 ? FOODS : FOODS.filter(f=>foodMatches(f,tokens))).slice(0,60);
+  const tokens=q.split(/\s+/).filter(Boolean);
+  const all=tokens.length===0?FOODS:FOODS.filter(f=>foodMatches(f,tokens));
+  const list=all.slice(0,80);
+  document.getElementById('rescount').textContent=
+    tokens.length===0?`${FOODS.length} foods — start typing to filter`:`${all.length} result${all.length===1?'':'s'}`;
   const box=document.getElementById('results');
-  if(list.length===0){ box.innerHTML='<div class="empty">No match — use the Custom tab to enter it manually.</div>'; return; }
-  box.innerHTML = list.map((f)=>{ const i=FOODS.indexOf(f);
-    return `<div class="foodrow" onclick="pick(${i})"><span>${f.n}</span>
-      <small>${f.c} kcal · ${f.p}g P / ${unitInfo[f.u].b}</small></div>`; }).join('');
+  if(list.length===0){ box.innerHTML='<div class="empty">No match found.<br>Switch to <b>Custom</b> to enter it manually.</div>'; return; }
+  box.innerHTML=list.map(f=>{ const i=FOODS.indexOf(f);
+    return `<button class="frow" onclick="pick(${i})">
+      <div class="fn"><div class="t">${escapeHtml(f.n)}</div><div class="s">${unitInfo[f.u].b}</div></div>
+      <div class="fm"><div class="c">${f.c} kcal</div><div class="p">${f.p} g protein</div></div></button>`; }).join('');
 }
 function pick(i){ sel=FOODS[i]; const info=unitInfo[sel.u];
   document.getElementById('sel-name').textContent=sel.n;
   document.getElementById('qty-label').textContent=info.label;
+  document.getElementById('qty-unit').textContent=info.suffix;
   document.getElementById('qty').value=info.def;
   updateSearchView(); renderPreview(); updateConfirm(); scrollSheetTop();
 }
-function clearSel(){ sel=null;
-  renderResults(); updateSearchView(); updateConfirm(); scrollSheetTop();
-}
-function servingCals(){ const q=num(document.getElementById('qty').value); return sel.c*q/unitInfo[sel.u].basis; }
-function servingProt(){ const q=num(document.getElementById('qty').value); return sel.p*q/unitInfo[sel.u].basis; }
+function clearSel(){ sel=null; renderResults(); updateSearchView(); updateConfirm(); scrollSheetTop();
+  document.getElementById('food-q').focus(); }
+function adjustQty(dir){ if(!sel) return; const info=unitInfo[sel.u];
+  let v=num(document.getElementById('qty').value)+dir*info.step; if(v<0)v=0;
+  document.getElementById('qty').value=(info.step<1?v.toFixed(1):Math.round(v)); renderPreview(); updateConfirm(); }
+function servingCals(){ return sel.c*num(document.getElementById('qty').value)/unitInfo[sel.u].basis; }
+function servingProt(){ return sel.p*num(document.getElementById('qty').value)/unitInfo[sel.u].basis; }
 function renderPreview(){ if(!sel) return;
-  document.getElementById('pv-cal').textContent=round(servingCals())+' kcal';
-  document.getElementById('pv-prot').textContent=round(servingProt())+' g';
-  updateConfirm();
-}
-function updateConfirm(){
-  const btn=document.getElementById('add-confirm');
-  if(mode==='search') btn.disabled = !(sel && num(document.getElementById('qty').value)>0);
-  else btn.disabled = !(document.getElementById('c-cal').value!=='');
+  document.getElementById('pv-cal').textContent=round(servingCals());
+  document.getElementById('pv-prot').textContent=round(servingProt()); updateConfirm(); }
+function updateConfirm(){ const b=document.getElementById('add-confirm');
+  b.disabled = mode==='search' ? !(sel&&num(document.getElementById('qty').value)>0) : (document.getElementById('c-cal').value==='');
 }
 ['c-cal','c-prot','c-name'].forEach(id=>document.addEventListener('input',e=>{ if(e.target.id===id) updateConfirm(); }));
 function confirmAdd(){
-  let entry;
-  if(mode==='search' && sel){
-    const q=num(document.getElementById('qty').value); const info=unitInfo[sel.u];
-    const label = `${round(q)} ${info.suffix}`;
-    entry={ id:uid(), name:`${sel.n} — ${label}`, calories:servingCals(), protein:servingProt(), date:selectedDate.toISOString() };
-  } else {
-    entry={ id:uid(), name:(document.getElementById('c-name').value.trim()||'Meal'),
-      calories:num(document.getElementById('c-cal').value), protein:num(document.getElementById('c-prot').value),
-      date:selectedDate.toISOString() };
-  }
+  const day=startOfDay(selectedDate); let entry;
+  if(mode==='search'&&sel){ const q=num(document.getElementById('qty').value); const info=unitInfo[sel.u];
+    entry={ id:uid(), name:`${sel.n} — ${info.step<1?q:round(q)} ${info.suffix}`, calories:servingCals(), protein:servingProt(), date:day.toISOString() };
+  } else { entry={ id:uid(), name:(document.getElementById('c-name').value.trim()||'Meal'),
+    calories:num(document.getElementById('c-cal').value), protein:num(document.getElementById('c-prot').value), date:day.toISOString() }; }
   foods.push(entry); saveFoods(); closeAdd(); renderLog();
 }
-function uid(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
 
 // ---------- weight ----------
 function openWeight(){ document.getElementById('w-val').value='';
@@ -741,89 +706,115 @@ function openWeight(){ document.getElementById('w-val').value='';
   document.getElementById('weightModal').classList.add('open'); }
 function closeWeight(){ document.getElementById('weightModal').classList.remove('open'); }
 function confirmWeight(){ const v=num(document.getElementById('w-val').value); if(v<=0) return;
-  const d=startOfDay(new Date(document.getElementById('w-date').value));
+  const d=startOfDay(new Date(document.getElementById('w-date').value||new Date()));
   weights.push({id:uid(), weightKg:v, date:d.toISOString()}); saveWeights(); closeWeight(); renderWeight(); }
 function deleteWeight(id){ weights=weights.filter(w=>w.id!==id); saveWeights(); renderWeight(); }
+function computeChart(data){
+  const W=340,H=210,padL=32,padR=12,padT=16,padB=26;
+  const xs=data.map(d=>new Date(d.date).getTime()), ys=data.map(d=>d.weightKg);
+  const minX=Math.min(...xs), maxX=Math.max(...xs);
+  let minY=Math.min(...ys), maxY=Math.max(...ys);
+  if(minY===maxY){ minY-=1; maxY+=1; } else { const m=(maxY-minY)*0.18; minY-=m; maxY+=m; }
+  const sx=x=>maxX===minX?W/2:padL+(x-minX)/(maxX-minX)*(W-padL-padR);
+  const sy=y=>H-padB-(y-minY)/(maxY-minY)*(H-padT-padB);
+  const pts=data.map(d=>({px:sx(new Date(d.date).getTime()),py:sy(d.weightKg),w:d.weightKg,date:d.date}));
+  return {W,H,padL,padR,padT,padB,minY,maxY,sx,sy,pts};
+}
 function renderWeight(){
   const sorted=[...weights].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const curEl=document.getElementById('w-current'), chEl=document.getElementById('w-change');
+  if(sorted.length){ curEl.textContent=sorted[sorted.length-1].weightKg.toFixed(1)+' kg';
+    const diff=sorted[sorted.length-1].weightKg-sorted[0].weightKg;
+    chEl.textContent=(diff>0?'+':'')+diff.toFixed(1)+' kg';
+    chEl.className='v delta '+(diff<0?'down':diff>0?'up':'');
+  } else { curEl.textContent='—'; chEl.textContent='—'; chEl.className='v delta'; }
   const chart=document.getElementById('chart');
-  if(sorted.length<1){ chart.innerHTML='<div class="empty">Log your first weigh-in to see your trend.</div>'; }
-  else { chart.innerHTML=buildChart(sorted); }
+  if(sorted.length<1){ chart.innerHTML='<div class="empty">Log your first weigh-in with the + button<br>to see your trend.</div>'; }
+  else {
+    const g=computeChart(sorted);
+    const line=g.pts.map(p=>`${p.px.toFixed(1)},${p.py.toFixed(1)}`).join(' ');
+    const area=`${g.padL},${g.H-g.padB} `+line+` ${g.pts[g.pts.length-1].px.toFixed(1)},${g.H-g.padB}`;
+    const dots=g.pts.map(p=>`<circle cx="${p.px.toFixed(1)}" cy="${p.py.toFixed(1)}" r="4" fill="var(--accent)" stroke="var(--card)" stroke-width="2"/>`).join('');
+    const last=g.pts[g.pts.length-1];
+    chart.innerHTML=`<svg viewBox="0 0 ${g.W} ${g.H}">
+      <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+      <text class="axlab" x="2" y="${(g.sy(g.maxY)+4).toFixed(1)}">${g.maxY.toFixed(1)}</text>
+      <text class="axlab" x="2" y="${(g.sy(g.minY)+4).toFixed(1)}">${g.minY.toFixed(1)}</text>
+      <polygon points="${area}" fill="url(#wg)"/>
+      <polyline points="${line}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${dots}
+      <text x="${last.px.toFixed(1)}" y="${(last.py-12).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text)">${last.w.toFixed(1)}</text>
+      <circle id="wcursor" r="6" fill="none" stroke="var(--accent)" stroke-width="2" opacity="0"/>
+    </svg><div class="chart-tip" id="wtip"></div>`;
+    attachChartTouch(g);
+  }
   const box=document.getElementById('weights');
   if(sorted.length===0){ box.innerHTML='<div class="empty">No weigh-ins yet.</div>'; return; }
   box.innerHTML=[...sorted].reverse().map(w=>`<div class="meal">
-    <div class="nm">${new Date(w.date).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}</div>
+    <div class="nm"><div class="t">${new Date(w.date).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'})}</div></div>
     <div class="cal">${w.weightKg.toFixed(1)} kg</div>
-    <button class="del" onclick="deleteWeight('${w.id}')">🗑</button></div>`).join('');
+    <button class="del" onclick="deleteWeight('${w.id}')" aria-label="Delete">✕</button></div>`).join('');
 }
-function buildChart(data){
-  const W=320,H=200,pad=30;
-  const xs=data.map(d=>new Date(d.date).getTime());
-  const ys=data.map(d=>d.weightKg);
-  const minX=Math.min(...xs), maxX=Math.max(...xs);
-  let minY=Math.min(...ys), maxY=Math.max(...ys);
-  if(minY===maxY){ minY-=1; maxY+=1; } else { const m=(maxY-minY)*0.15; minY-=m; maxY+=m; }
-  const sx=x=> maxX===minX ? W/2 : pad+(x-minX)/(maxX-minX)*(W-2*pad);
-  const sy=y=> H-pad-(y-minY)/(maxY-minY)*(H-2*pad);
-  const pts=data.map(d=>`${sx(new Date(d.date).getTime()).toFixed(1)},${sy(d.weightKg).toFixed(1)}`).join(' ');
-  const dots=data.map(d=>`<circle cx="${sx(new Date(d.date).getTime()).toFixed(1)}" cy="${sy(d.weightKg).toFixed(1)}" r="3" fill="var(--blue)"/>`).join('');
-  const yTop=`<text x="2" y="${sy(maxY)+4}">${maxY.toFixed(1)}</text>`;
-  const yBot=`<text x="2" y="${sy(minY)+4}">${minY.toFixed(1)}</text>`;
-  return `<svg width="100%" viewBox="0 0 ${W} ${H}">
-    ${yTop}${yBot}
-    <polyline fill="none" stroke="var(--blue)" stroke-width="2" points="${pts}"/>${dots}</svg>`;
-}
-
-// ---------- tabs ----------
-function showTab(t){
-  ['profile','log','weight'].forEach(x=>{
-    document.getElementById('page-'+x).classList.toggle('active', x===t);
-    document.getElementById('tab-'+x).classList.toggle('active', x===t);
-  });
-  document.getElementById('title').textContent = {profile:'Profile',log:'Daily Log',weight:'Weight'}[t];
-  if(t==='log') renderLog(); if(t==='weight') renderWeight();
+function attachChartTouch(g){
+  const svg=document.querySelector('#chart svg'); if(!svg) return;
+  const tip=document.getElementById('wtip'), cur=document.getElementById('wcursor');
+  function move(clientX){
+    const rect=svg.getBoundingClientRect(); const vbX=(clientX-rect.left)/rect.width*g.W;
+    let best=g.pts[0]; for(const p of g.pts) if(Math.abs(p.px-vbX)<Math.abs(best.px-vbX)) best=p;
+    cur.setAttribute('cx',best.px); cur.setAttribute('cy',best.py); cur.setAttribute('opacity','1');
+    tip.style.opacity='1'; tip.style.left=(best.px/g.W*rect.width)+'px'; tip.style.top=(best.py/g.H*rect.height)+'px';
+    tip.textContent=best.w.toFixed(1)+' kg · '+new Date(best.date).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+  }
+  function end(){ tip.style.opacity='0'; cur.setAttribute('opacity','0'); }
+  svg.addEventListener('pointerdown',e=>move(e.clientX));
+  svg.addEventListener('pointermove',e=>{ if(e.buttons||e.pointerType==='touch') move(e.clientX); });
+  svg.addEventListener('pointerup',end); svg.addEventListener('pointerleave',end);
 }
 
 // ---------- export / import ----------
 function syncProfileInputs(){
-  document.getElementById('p-weight').value=profile.weight;
-  document.getElementById('p-height').value=profile.height;
-  document.getElementById('p-age').value=profile.age;
-  document.getElementById('p-deficit').value=profile.deficit;
-  document.getElementById('p-ppk').value=profile.ppk;
-  document.getElementById('p-sex').value=profile.sex;
+  document.getElementById('p-weight').value=profile.weight; document.getElementById('p-height').value=profile.height;
+  document.getElementById('p-age').value=profile.age; document.getElementById('p-deficit').value=profile.deficit;
+  document.getElementById('p-ppk').value=profile.ppk; document.getElementById('p-sex').value=profile.sex;
   document.getElementById('p-activity').value=String(profile.activity);
 }
 function exportData(){
-  const data={ app:'calorie-tracker', version:1, profile, foods, weights };
-  const blob=new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download='calorie-tracker-backup.json';
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  const data={ app:'calorie-tracker', version:2, profile, foods, weights };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=url; a.download='calorie-tracker-backup.json'; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function importData(e){
-  const file=e.target.files && e.target.files[0];
-  if(!file){ return; }
+  const file=e.target.files&&e.target.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=()=>{
-    try{
-      const d=JSON.parse(reader.result);
-      if(!confirm('Import this backup? It will replace all data currently on this device.')){ e.target.value=''; return; }
-      if(d.profile) profile=Object.assign({weight:95,height:172.7,age:30,sex:'Male',activity:1.55,deficit:700,ppk:2.0}, d.profile);
-      if(Array.isArray(d.foods)) foods=d.foods;
-      if(Array.isArray(d.weights)) weights=d.weights;
-      saveProfile(); saveFoods(); saveWeights();
-      syncProfileInputs(); renderProfile(); renderLog(); renderWeight();
+  reader.onload=()=>{ try{ const d=JSON.parse(reader.result);
+      if(!confirm('Import this backup? It will replace all data on this device.')){ e.target.value=''; return; }
+      if(d.profile) profile=Object.assign({weight:95,height:172.7,age:30,sex:'Male',activity:1.55,deficit:700,ppk:2.0},d.profile);
+      if(Array.isArray(d.foods)) foods=d.foods; if(Array.isArray(d.weights)) weights=d.weights;
+      saveProfile(); saveFoods(); saveWeights(); syncProfileInputs(); renderProfile(); renderLog(); renderWeight();
       alert('Backup imported successfully.');
-    }catch(err){
-      alert('Could not read that file. Make sure it is a Calorie Tracker backup (.json).');
-    }
-    e.target.value='';
-  };
+    }catch(err){ alert('Could not read that file. Make sure it is a Calorie Tracker backup (.json).'); }
+    e.target.value=''; };
   reader.readAsText(file);
 }
+
+// ---------- tabs & FAB ----------
+function showTab(t){ currentTab=t;
+  ['profile','log','weight'].forEach(x=>{
+    document.getElementById('page-'+x).classList.toggle('active',x===t);
+    document.getElementById('tab-'+x).classList.toggle('active',x===t);
+  });
+  document.getElementById('title').textContent={profile:'Profile',log:'Daily Log',weight:'Weight'}[t];
+  const fab=document.getElementById('fab'); fab.classList.toggle('show',t!=='profile');
+  if(t==='log') renderLog(); if(t==='weight') renderWeight();
+}
+function fabAction(){ if(currentTab==='log') openAdd(); else if(currentTab==='weight') openWeight(); }
+// close sheets on backdrop tap
+['addModal','weightModal'].forEach(id=>document.getElementById(id).addEventListener('click',e=>{
+  if(e.target.id===id) document.getElementById(id).classList.remove('open'); }));
 
 // ---------- init ----------
 bindProfile(); renderProfile(); renderLog(); renderWeight();

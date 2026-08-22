@@ -127,6 +127,16 @@
     <div class="result"><span class="k">Protein target</span><span class="v hl" id="r-protein">—</span></div>
     <div class="hint">Mifflin-St Jeor: BMR = 10·wt + 6.25·ht − 5·age + (5 male / −161 female). Maintenance = BMR × activity. Target = maintenance − deficit.</div>
   </div>
+
+  <div class="card">
+    <strong>Backup</strong>
+    <div class="hint">Data is stored only on this device. Export a backup file to keep it safe or move it to another device, then Import it there.</div>
+    <div class="sheetbtns">
+      <button class="btn-cancel" onclick="exportData()">Export</button>
+      <button class="btn-primary" onclick="document.getElementById('import-file').click()">Import</button>
+    </div>
+    <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importData(event)">
+  </div>
 </section>
 
 <!-- DAILY LOG -->
@@ -251,27 +261,143 @@ function saveWeights(){ LS.set('weights', weights); }
 
 // ---------- food db ----------
 // per 100 g/ml, or per piece. unit: g | ml | pc
+// n=name, c=kcal, p=protein (per 100 g/ml or per piece), u=g|ml|pc, k=extra search keywords
 const FOODS = [
-  {n:"Chicken breast (cooked)", c:165, p:31,   u:"g"},
-  {n:"Chicken thigh (cooked)",  c:209, p:26,   u:"g"},
-  {n:"Salmon (cooked)",         c:208, p:22,   u:"g"},
-  {n:"White rice (cooked)",     c:130, p:2.7,  u:"g"},
-  {n:"Brown rice (cooked)",     c:123, p:2.7,  u:"g"},
-  {n:"Oats (dry)",              c:389, p:16.9, u:"g"},
-  {n:"Greek yogurt",            c:59,  p:10,   u:"g"},
-  {n:"Paneer",                  c:265, p:18,   u:"g"},
-  {n:"Lentils / dal (cooked)",  c:116, p:9,    u:"g"},
-  {n:"Almonds",                 c:579, p:21,   u:"g"},
-  {n:"Peanut butter",           c:588, p:25,   u:"g"},
-  {n:"White bread",             c:265, p:9,    u:"g"},
-  {n:"Banana",                  c:89,  p:1.1,  u:"g"},
-  {n:"Apple",                   c:52,  p:0.3,  u:"g"},
-  {n:"Whey protein",            c:400, p:80,   u:"g"},
-  {n:"Black coffee",            c:1,   p:0.1,  u:"ml"},
-  {n:"Whole milk",              c:61,  p:3.2,  u:"ml"},
-  {n:"Orange juice",            c:45,  p:0.7,  u:"ml"},
-  {n:"Egg (large)",             c:78,  p:6.3,  u:"pc"},
-  {n:"Roti / chapati",          c:104, p:3,    u:"pc"},
+  // Proteins
+  {n:"Chicken breast (cooked)", c:165, p:31,  u:"g", k:"grilled"},
+  {n:"Chicken thigh (cooked)",  c:209, p:26,  u:"g"},
+  {n:"Chicken curry",           c:180, p:14,  u:"g", k:"gravy"},
+  {n:"Butter chicken",          c:240, p:14,  u:"g", k:"murgh makhani"},
+  {n:"Tandoori chicken",        c:175, p:28,  u:"g"},
+  {n:"Fish (cooked)",           c:200, p:22,  u:"g", k:"machli"},
+  {n:"Salmon (cooked)",         c:208, p:22,  u:"g"},
+  {n:"Tuna (canned)",           c:116, p:26,  u:"g"},
+  {n:"Prawns (cooked)",         c:99,  p:24,  u:"g", k:"shrimp"},
+  {n:"Mutton (cooked)",         c:250, p:25,  u:"g", k:"goat lamb"},
+  {n:"Beef (cooked)",           c:250, p:26,  u:"g"},
+  {n:"Pork (cooked)",           c:242, p:27,  u:"g"},
+  {n:"Egg (large)",             c:78,  p:6.3, u:"pc"},
+  {n:"Egg white",               c:17,  p:3.6, u:"pc", k:"boiled"},
+  {n:"Egg curry",               c:150, p:8,   u:"g"},
+  {n:"Paneer",                  c:265, p:18,  u:"g", k:"cottage cheese"},
+  {n:"Palak paneer",            c:180, p:8,   u:"g", k:"spinach"},
+  {n:"Paneer butter masala",    c:230, p:8,   u:"g", k:"makhani"},
+  {n:"Tofu",                    c:76,  p:8,   u:"g", k:"soy bean curd"},
+  {n:"Soya chunks (dry)",       c:345, p:52,  u:"g", k:"meal maker nutrela"},
+  {n:"Whey protein",            c:400, p:80,  u:"g", k:"powder shake scoop"},
+  {n:"Greek yogurt",            c:59,  p:10,  u:"g"},
+  // Dals & legumes (cooked)
+  {n:"Dal (cooked)",            c:116, p:9,   u:"g", k:"lentil tadka"},
+  {n:"Dal makhani",             c:145, p:6,   u:"g"},
+  {n:"Rajma (cooked)",          c:140, p:8,   u:"g", k:"kidney beans"},
+  {n:"Chole / chana masala",    c:130, p:6,   u:"g", k:"chickpea"},
+  {n:"Boiled chickpeas",        c:164, p:8.9, u:"g", k:"chana kabuli"},
+  {n:"Sambar",                  c:85,  p:3,   u:"g", k:"lentil south indian"},
+  {n:"Green moong (cooked)",    c:105, p:7,   u:"g", k:"mung sprouts"},
+  // Grains, rice & breads
+  {n:"White rice (cooked)",     c:130, p:2.7, u:"g", k:"chawal"},
+  {n:"Brown rice (cooked)",     c:123, p:2.7, u:"g"},
+  {n:"Jeera rice",              c:150, p:3,   u:"g", k:"cumin"},
+  {n:"Veg biryani / pulao",     c:180, p:4,   u:"g", k:"pulav"},
+  {n:"Chicken biryani",         c:200, p:8,   u:"g"},
+  {n:"Roti / chapati",          c:104, p:3,   u:"pc", k:"phulka wheat bread"},
+  {n:"Naan",                    c:260, p:9,   u:"pc"},
+  {n:"Plain paratha",           c:210, p:4,   u:"pc"},
+  {n:"Aloo paratha",            c:300, p:6,   u:"pc", k:"potato"},
+  {n:"Puri",                    c:85,  p:1.5, u:"pc", k:"poori"},
+  {n:"Dosa (plain)",            c:168, p:4,   u:"pc"},
+  {n:"Masala dosa",             c:290, p:5,   u:"pc"},
+  {n:"Idli",                    c:58,  p:2,   u:"pc"},
+  {n:"Medu vada",               c:130, p:3,   u:"pc", k:"vada"},
+  {n:"Upma",                    c:120, p:3,   u:"g"},
+  {n:"Poha",                    c:130, p:2.5, u:"g", k:"flattened rice"},
+  {n:"Khichdi",                 c:120, p:4,   u:"g"},
+  {n:"Pasta (cooked)",          c:131, p:5,   u:"g"},
+  {n:"Noodles (cooked)",        c:138, p:4.5, u:"g", k:"hakka chowmein"},
+  {n:"Maggi (cooked)",          c:150, p:3,   u:"g", k:"instant noodles"},
+  {n:"White bread",             c:265, p:9,   u:"g"},
+  {n:"Brown bread",             c:250, p:12,  u:"g", k:"whole wheat"},
+  {n:"Oats (dry)",              c:389, p:16.9,u:"g"},
+  {n:"Cornflakes",              c:357, p:7,   u:"g"},
+  // Snacks & street food
+  {n:"Samosa",                  c:262, p:3.5, u:"pc"},
+  {n:"Veg pakora / bhaji",      c:315, p:6,   u:"g", k:"fritter bhajji"},
+  {n:"Veg roll / kathi roll",   c:200, p:5,   u:"pc", k:"vegetable frankie wrap"},
+  {n:"Chicken roll / kathi roll",c:230,p:12,  u:"pc", k:"frankie wrap"},
+  {n:"Veg spring roll",         c:150, p:3,   u:"pc", k:"vegetable"},
+  {n:"Veg momos",               c:35,  p:1.2, u:"pc", k:"dumpling dimsum vegetable"},
+  {n:"Chicken momos",           c:40,  p:2,   u:"pc", k:"dumpling"},
+  {n:"Pav bhaji",               c:130, p:3,   u:"g"},
+  {n:"Vada pav",                c:290, p:6,   u:"pc"},
+  {n:"Misal pav",               c:160, p:6,   u:"g"},
+  {n:"Dhokla",                  c:160, p:5,   u:"g"},
+  {n:"Veg sandwich",            c:250, p:8,   u:"pc"},
+  {n:"Veg burger",              c:250, p:8,   u:"pc", k:"burger"},
+  {n:"Chicken burger",          c:300, p:17,  u:"pc", k:"burger"},
+  {n:"Pizza",                   c:266, p:11,  u:"g"},
+  {n:"French fries",            c:312, p:3.4, u:"g", k:"fries chips"},
+  {n:"Aloo tikki",              c:150, p:3,   u:"pc", k:"potato patty"},
+  {n:"Bhel puri",               c:200, p:4,   u:"g", k:"chaat"},
+  {n:"Pani puri",               c:18,  p:0.4, u:"pc", k:"golgappa puchka gol gappa"},
+  // Dairy & fats
+  {n:"Whole milk",              c:61,  p:3.2, u:"ml", k:"doodh"},
+  {n:"Toned milk",              c:56,  p:3.1, u:"ml", k:"low fat"},
+  {n:"Curd / dahi",             c:60,  p:3.5, u:"g", k:"yogurt"},
+  {n:"Buttermilk / chaas",      c:30,  p:1.5, u:"ml", k:"chaas"},
+  {n:"Cheese (cheddar)",        c:402, p:25,  u:"g"},
+  {n:"Butter",                  c:717, p:0.9, u:"g", k:"makhan"},
+  {n:"Ghee",                    c:900, p:0,   u:"g", k:"clarified"},
+  {n:"Cooking oil",             c:884, p:0,   u:"g", k:"olive sunflower vegetable"},
+  // Nuts & seeds
+  {n:"Almonds",                 c:579, p:21,  u:"g", k:"badam"},
+  {n:"Peanuts",                 c:567, p:26,  u:"g", k:"groundnut moongphali"},
+  {n:"Peanut butter",           c:588, p:25,  u:"g"},
+  {n:"Cashews",                 c:553, p:18,  u:"g", k:"kaju"},
+  {n:"Walnuts",                 c:654, p:15,  u:"g", k:"akhrot"},
+  {n:"Chia seeds",              c:486, p:17,  u:"g"},
+  {n:"Dates",                   c:277, p:1.8, u:"g", k:"khajur"},
+  // Fruits & vegetables
+  {n:"Banana",                  c:89,  p:1.1, u:"g", k:"kela"},
+  {n:"Apple",                   c:52,  p:0.3, u:"g", k:"seb"},
+  {n:"Orange",                  c:47,  p:0.9, u:"g", k:"santra"},
+  {n:"Mango",                   c:60,  p:0.8, u:"g", k:"aam"},
+  {n:"Grapes",                  c:69,  p:0.7, u:"g", k:"angoor"},
+  {n:"Watermelon",              c:30,  p:0.6, u:"g", k:"tarbooj"},
+  {n:"Papaya",                  c:43,  p:0.5, u:"g"},
+  {n:"Pomegranate",             c:83,  p:1.7, u:"g", k:"anar"},
+  {n:"Guava",                   c:68,  p:2.6, u:"g", k:"amrud"},
+  {n:"Avocado",                 c:160, p:2,   u:"g"},
+  {n:"Potato (boiled)",         c:87,  p:1.9, u:"g", k:"aloo"},
+  {n:"Sweet potato",            c:86,  p:1.6, u:"g", k:"shakarkandi"},
+  {n:"Broccoli",                c:34,  p:2.8, u:"g"},
+  {n:"Spinach",                 c:23,  p:2.9, u:"g", k:"palak"},
+  {n:"Tomato",                  c:18,  p:0.9, u:"g", k:"tamatar"},
+  {n:"Onion",                   c:40,  p:1.1, u:"g", k:"pyaz"},
+  {n:"Carrot",                  c:41,  p:0.9, u:"g", k:"gajar"},
+  {n:"Cucumber",                c:15,  p:0.7, u:"g", k:"kheera"},
+  {n:"Mixed veg sabzi",         c:90,  p:3,   u:"g", k:"vegetable curry sabji"},
+  // Beverages
+  {n:"Black coffee",            c:1,   p:0.1, u:"ml"},
+  {n:"Filter coffee",           c:60,  p:1.5, u:"ml", k:"south indian"},
+  {n:"Masala chai",             c:65,  p:1.5, u:"ml", k:"tea milk"},
+  {n:"Green tea",               c:1,   p:0,   u:"ml"},
+  {n:"Orange juice",            c:45,  p:0.7, u:"ml"},
+  {n:"Coconut water",           c:19,  p:0.7, u:"ml", k:"nariyal"},
+  {n:"Lassi (sweet)",           c:110, p:2.5, u:"ml"},
+  {n:"Soft drink / cola",       c:42,  p:0,   u:"ml", k:"soda coke pepsi"},
+  {n:"Beer",                    c:43,  p:0.5, u:"ml"},
+  {n:"Wine",                    c:83,  p:0.1, u:"ml"},
+  // Sweets & desserts
+  {n:"Gulab jamun",             c:150, p:2,   u:"pc"},
+  {n:"Jalebi",                  c:50,  p:0.5, u:"pc"},
+  {n:"Rasgulla",                c:106, p:2,   u:"pc"},
+  {n:"Kheer",                   c:130, p:3,   u:"g", k:"payasam"},
+  {n:"Gajar halwa",             c:350, p:4,   u:"g", k:"carrot halwa"},
+  {n:"Laddu",                   c:185, p:3,   u:"pc", k:"ladoo"},
+  {n:"Barfi",                   c:350, p:6,   u:"g", k:"burfi"},
+  {n:"Ice cream",               c:207, p:3.5, u:"g"},
+  {n:"Dark chocolate",          c:546, p:7.8, u:"g"},
+  {n:"Biscuit",                 c:20,  p:0.3, u:"pc", k:"cookie marie"},
 ];
 const unitInfo = { g:{basis:100,label:"Grams",def:100,suffix:"g",b:"100 g"},
                    ml:{basis:100,label:"Millilitres",def:250,suffix:"ml",b:"100 ml"},
@@ -359,11 +485,16 @@ function setMode(m){ mode=m;
   document.getElementById('mode-custom').style.display = m==='custom'?'block':'none';
   updateConfirm();
 }
+function foodMatches(f, tokens){
+  const hay = (f.n + ' ' + (f.k||'')).toLowerCase();
+  return tokens.every(t => hay.includes(t));
+}
 function renderResults(){
   const q=document.getElementById('food-q').value.trim().toLowerCase();
-  const list = q==='' ? FOODS : FOODS.filter(f=>f.n.toLowerCase().includes(q));
+  const tokens = q.split(/\s+/).filter(Boolean);
+  const list = (tokens.length===0 ? FOODS : FOODS.filter(f=>foodMatches(f,tokens))).slice(0,60);
   const box=document.getElementById('results');
-  if(list.length===0){ box.innerHTML='<div class="empty">No match — use Custom.</div>'; return; }
+  if(list.length===0){ box.innerHTML='<div class="empty">No match — use the Custom tab to enter it manually.</div>'; return; }
   box.innerHTML = list.map((f)=>{ const i=FOODS.indexOf(f);
     return `<div class="foodrow" onclick="pick(${i})"><span>${f.n}</span>
       <small>${f.c} kcal · ${f.p}g P / ${unitInfo[f.u].b}</small></div>`; }).join('');
@@ -456,6 +587,47 @@ function showTab(t){
   });
   document.getElementById('title').textContent = {profile:'Profile',log:'Daily Log',weight:'Weight'}[t];
   if(t==='log') renderLog(); if(t==='weight') renderWeight();
+}
+
+// ---------- export / import ----------
+function syncProfileInputs(){
+  document.getElementById('p-weight').value=profile.weight;
+  document.getElementById('p-height').value=profile.height;
+  document.getElementById('p-age').value=profile.age;
+  document.getElementById('p-deficit').value=profile.deficit;
+  document.getElementById('p-ppk').value=profile.ppk;
+  document.getElementById('p-sex').value=profile.sex;
+  document.getElementById('p-activity').value=String(profile.activity);
+}
+function exportData(){
+  const data={ app:'calorie-tracker', version:1, profile, foods, weights };
+  const blob=new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='calorie-tracker-backup.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+function importData(e){
+  const file=e.target.files && e.target.files[0];
+  if(!file){ return; }
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const d=JSON.parse(reader.result);
+      if(!confirm('Import this backup? It will replace all data currently on this device.')){ e.target.value=''; return; }
+      if(d.profile) profile=Object.assign({weight:95,height:172.7,age:30,sex:'Male',activity:1.55,deficit:700,ppk:2.0}, d.profile);
+      if(Array.isArray(d.foods)) foods=d.foods;
+      if(Array.isArray(d.weights)) weights=d.weights;
+      saveProfile(); saveFoods(); saveWeights();
+      syncProfileInputs(); renderProfile(); renderLog(); renderWeight();
+      alert('Backup imported successfully.');
+    }catch(err){
+      alert('Could not read that file. Make sure it is a Calorie Tracker backup (.json).');
+    }
+    e.target.value='';
+  };
+  reader.readAsText(file);
 }
 
 // ---------- init ----------

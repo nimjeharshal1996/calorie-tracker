@@ -373,6 +373,11 @@
         <label class="fl">Meal name</label><input id="c-name" placeholder="e.g. Homemade sandwich">
         <label class="fl">Calories (kcal)</label><input id="c-cal" type="number" inputmode="decimal">
         <label class="fl">Protein (g)</label><input id="c-prot" type="number" inputmode="decimal">
+        <label style="display:flex;align-items:center;gap:10px;margin-top:16px;font-size:14px;font-weight:600;cursor:pointer;">
+          <input type="checkbox" id="c-save" style="width:20px;height:20px;accent-color:var(--accent);flex-shrink:0;">
+          Save to my food list for future use
+        </label>
+        <div class="hint" style="margin-top:4px;">Saved items appear in search results next time.</div>
       </div>
     </div>
   </div>
@@ -402,12 +407,14 @@ let profile = LS.get('profile', {weight:95, height:172.7, age:30, sex:'Male', ac
 let foods = LS.get('foods', []);
 let weights = LS.get('weights', []);
 let starred = LS.get('starred', []); // array of food indices
+let customFoods = LS.get('customFoods', []); // user-saved custom foods [{n,c,p,u}]
 let selectedDate = startOfDay(new Date());
 let currentTab = 'profile';
 function saveProfile(){ LS.set('profile', profile); }
 function saveFoods(){ LS.set('foods', foods); }
 function saveWeights(){ LS.set('weights', weights); }
 function saveStarred(){ LS.set('starred', starred); }
+function saveCustomFoods(){ LS.set('customFoods', customFoods); }
 function toggleStar(i,e){ e.stopPropagation(); const idx=starred.indexOf(i);
   if(idx>=0) starred.splice(idx,1); else starred.push(i);
   saveStarred(); renderResults(); }
@@ -488,6 +495,35 @@ const FOODS = [
   {n:"Medu vada",c:130,p:3,u:"pc",k:"vada"},{n:"Mysore bonda",c:250,p:4,u:"pc"},{n:"Pongal",c:150,p:4,u:"g"},
   {n:"Upma",c:120,p:3,u:"g"},{n:"Poha",c:130,p:2.5,u:"g",k:"flattened rice"},{n:"Khichdi",c:120,p:4,u:"g"},
   {n:"Sabudana khichdi",c:200,p:2,u:"g",k:"sago tapioca"},
+  // Bangalore / South Indian specials
+  {n:"Ghee podi dosa",c:350,p:5,u:"pc",k:"bangalore milagai podi masala"},{n:"Ghee podi idli",c:100,p:3,u:"pc",k:"bangalore milagai"},
+  {n:"Ghee roast dosa",c:320,p:4,u:"pc",k:"bangalore davangere"},{n:"Set dosa",c:120,p:3,u:"pc",k:"sponge soft bangalore"},
+  {n:"Benne dosa",c:280,p:4,u:"pc",k:"davangere butter"},{n:"Neer dosa",c:110,p:2,u:"pc",k:"mangalore rice crepe"},
+  {n:"Ragi dosa",c:150,p:4,u:"pc",k:"finger millet"},{n:"Ragi mudde",c:105,p:3,u:"pc",k:"ragi ball"},
+  {n:"Akki roti",c:180,p:3,u:"pc",k:"rice roti karnataka"},{n:"Jolada roti",c:200,p:5,u:"pc",k:"jowar roti karnataka"},
+  {n:"Bisi bele bath",c:170,p:5,u:"g",k:"karnataka rice sambar"},{n:"Chitranna",c:160,p:3,u:"g",k:"lemon rice karnataka"},
+  {n:"Vangi bath",c:180,p:3,u:"g",k:"brinjal rice karnataka"},{n:"Puliyogare",c:180,p:3,u:"g",k:"tamarind rice karnataka"},
+  {n:"Mysore masala dosa",c:310,p:5,u:"pc",k:"red chutney potato"},{n:"Onion rava dosa",c:230,p:4,u:"pc"},
+  {n:"Paper dosa",c:130,p:3,u:"pc",k:"crispy thin"},{n:"Cone dosa",c:180,p:3,u:"pc"},
+  {n:"Idli vada combo",c:188,p:5,u:"pc",k:"plate"},{n:"Mini idli sambar",c:180,p:5,u:"g",k:"tiffin sambar"},
+  {n:"Rava idli",c:80,p:2.5,u:"pc",k:"semolina"},{n:"Thatte idli",c:90,p:3,u:"pc",k:"plate idli karnataka"},
+  {n:"Mangalore buns",c:200,p:3,u:"pc",k:"banana sweet puri"},{n:"Goli baje",c:60,p:1.5,u:"pc",k:"mangalore bajji"},
+  {n:"Paddu / paniyaram",c:50,p:1.5,u:"pc",k:"appe kuzhi"},{n:"Pesarattu",c:120,p:5,u:"pc",k:"moong dal dosa andhra"},
+  {n:"Attu / dosa (andhra)",c:170,p:4,u:"pc",k:"pesarattu style"},
+  // Andhra / Telangana
+  {n:"Andhra meals (thali)",c:800,p:20,u:"pc",k:"rice sambar rasam dal fry curry curd"},
+  {n:"Hyderabadi biryani",c:220,p:9,u:"g",k:"dum gosht"},{n:"Hyderabadi veg biryani",c:190,p:4,u:"g"},
+  {n:"Gongura chicken",c:190,p:16,u:"g",k:"andhra sorrel"},{n:"Gongura mutton",c:220,p:18,u:"g",k:"andhra sorrel"},
+  {n:"Andhra chicken curry",c:200,p:15,u:"g",k:"spicy kodi"},{n:"Andhra egg curry",c:160,p:8,u:"g",k:"guddu pulusu"},
+  {n:"Gutti vankaya",c:140,p:2.5,u:"g",k:"stuffed brinjal andhra"},{n:"Gongura pachadi",c:80,p:2,u:"g",k:"chutney sorrel"},
+  {n:"Pesarattu upma",c:150,p:6,u:"pc",k:"andhra moong dosa upma"},{n:"Pulihora",c:180,p:3,u:"g",k:"andhra tamarind rice"},
+  {n:"Pappu (dal)",c:120,p:7,u:"g",k:"andhra lentil"},{n:"Tomato pappu",c:110,p:6,u:"g",k:"andhra dal"},
+  {n:"Dosakaya pappu",c:100,p:5,u:"g",k:"cucumber dal andhra"},{n:"Natu kodi pulusu",c:180,p:14,u:"g",k:"country chicken curry"},
+  {n:"Royyala iguru",c:160,p:16,u:"g",k:"prawn fry andhra"},{n:"Chepa pulusu",c:150,p:14,u:"g",k:"fish curry andhra"},
+  {n:"Mirapakaya bajji",c:80,p:1.5,u:"pc",k:"chilli bajji andhra"},{n:"Punugulu",c:70,p:2,u:"pc",k:"andhra snack batter"},
+  {n:"Sakinalu",c:120,p:2,u:"pc",k:"telangana snack rice"},{n:"Jonna roti",c:200,p:5,u:"pc",k:"jowar telangana"},
+  {n:"Sarva pindi",c:180,p:5,u:"pc",k:"telangana rice flour"},{n:"Double ka meetha",c:250,p:5,u:"g",k:"hyderabadi bread pudding"},
+  {n:"Qubani ka meetha",c:180,p:1,u:"g",k:"hyderabadi apricot dessert"},{n:"Pootharekulu",c:150,p:2,u:"pc",k:"andhra paper sweet"},
   // Snacks & street food
   {n:"Samosa",c:262,p:3.5,u:"pc"},{n:"Kachori",c:300,p:5,u:"pc"},{n:"Veg pakora / bhaji",c:315,p:6,u:"g",k:"fritter bhajji"},
   {n:"Onion pakora",c:300,p:5,u:"g"},{n:"Paneer pakora",c:280,p:10,u:"g"},{n:"Bread pakora",c:280,p:6,u:"pc"},
@@ -675,6 +711,7 @@ function scrollSheetTop(){ const b=document.getElementById('sheet-body'); if(b) 
 function openAdd(){
   mode='search'; sel=null;
   ['food-q','qty','c-name','c-cal','c-prot'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('c-save').checked=false;
   document.getElementById('seg-search').classList.add('active');
   document.getElementById('seg-custom').classList.remove('active');
   renderResults(); updateSearchView(); updateConfirm();
@@ -697,34 +734,37 @@ function updateSearchView(){
   document.getElementById('mode-custom').style.display=(!s)?'block':'none';
 }
 function foodMatches(f,tokens){ const h=(f.n+' '+(f.k||'')).toLowerCase(); return tokens.every(t=>h.includes(t)); }
+function allFoods(){ return [...FOODS, ...customFoods]; }
 function renderResults(){
+  const AF=allFoods();
   const q=document.getElementById('food-q').value.trim().toLowerCase();
   const tokens=q.split(/\s+/).filter(Boolean);
-  const all=tokens.length===0?FOODS:FOODS.filter(f=>foodMatches(f,tokens));
-  const allIdx=all.map(f=>FOODS.indexOf(f));
+  const all=tokens.length===0?AF:AF.filter(f=>foodMatches(f,tokens));
+  const allIdx=all.map(f=>AF.indexOf(f));
   // separate starred from rest
   const starredItems=allIdx.filter(i=>starred.includes(i));
   const otherItems=allIdx.filter(i=>!starred.includes(i));
   const display=[...starredItems,...otherItems].slice(0,80);
   const starCount=Math.min(starredItems.length,80);
   document.getElementById('rescount').textContent=
-    tokens.length===0?`${FOODS.length} foods — start typing to filter`:`${all.length} result${all.length===1?'':'s'}`;
+    tokens.length===0?`${AF.length} foods — start typing to filter`:`${all.length} result${all.length===1?'':'s'}`;
   const box=document.getElementById('results');
   if(display.length===0){ box.innerHTML='<div class="empty">No match found.<br>Switch to <b>Custom</b> to enter it manually.</div>'; return; }
   let html='';
   if(starCount>0) html+='<div class="star-divider">⭐ Favourites</div>';
   display.forEach((i,pos)=>{
     if(pos===starCount && starCount>0) html+='<div class="star-divider">All</div>';
-    const f=FOODS[i]; const isStar=starred.includes(i);
+    const f=AF[i]; const isStar=starred.includes(i);
+    const isCustom=i>=FOODS.length;
     html+=`<button class="frow" onclick="pick(${i})">
-      <div class="fn"><div class="t">${escapeHtml(f.n)}</div><div class="s">${unitInfo[f.u].b}</div></div>
+      <div class="fn"><div class="t">${escapeHtml(f.n)}${isCustom?' <span style="font-size:10px;color:var(--accent)">★ MY</span>':''}</div><div class="s">${unitInfo[f.u].b}</div></div>
       <div class="fm"><div class="c">${f.c} kcal</div><div class="p">${f.p} g protein</div></div>
       <span class="star ${isStar?'on':''}" onclick="toggleStar(${i},event)">${isStar?'★':'☆'}</span></button>`;
   });
   box.innerHTML=html;
 }
 let useAlt=false; // whether we're using alternate unit for current selection
-function pick(i){ document.getElementById('food-q').blur(); sel=FOODS[i]; useAlt=false;
+function pick(i){ document.getElementById('food-q').blur(); sel=allFoods()[i]; useAlt=false;
   const info=unitInfo[sel.u];
   document.getElementById('sel-name').textContent=sel.n;
   document.getElementById('qty-label').textContent=info.label;
@@ -777,8 +817,20 @@ function confirmAdd(){
     const alt=useAlt?ALT_UNITS[sel.n]:null;
     const info=unitInfo[alt?alt.u:sel.u];
     entry={ id:uid(), name:`${sel.n} — ${info.step<1?q:round(q)} ${info.suffix}`, calories:servingCals(), protein:servingProt(), date:day.toISOString() };
-  } else { entry={ id:uid(), name:(document.getElementById('c-name').value.trim()||'Meal'),
-    calories:num(document.getElementById('c-cal').value), protein:num(document.getElementById('c-prot').value), date:day.toISOString() }; }
+  } else {
+    const cName=document.getElementById('c-name').value.trim()||'Meal';
+    const cCal=num(document.getElementById('c-cal').value);
+    const cProt=num(document.getElementById('c-prot').value);
+    entry={ id:uid(), name:cName, calories:cCal, protein:cProt, date:day.toISOString() };
+    // Save to repository if checkbox is checked
+    if(document.getElementById('c-save').checked && cName && cCal>0){
+      const exists=allFoods().some(f=>f.n.toLowerCase()===cName.toLowerCase());
+      if(!exists){
+        customFoods.push({n:cName, c:round(cCal), p:round(cProt*10)/10, u:"pc", k:"custom"});
+        saveCustomFoods();
+      }
+    }
+  }
   foods.push(entry); saveFoods(); closeAdd(); renderLog();
 }
 
@@ -863,7 +915,7 @@ function syncProfileInputs(){
   document.getElementById('p-activity').value=String(profile.activity);
 }
 function exportData(){
-  const data={ app:'calorie-tracker', version:2, profile, foods, weights, starred };
+  const data={ app:'calorie-tracker', version:2, profile, foods, weights, starred, customFoods };
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob); const a=document.createElement('a');
   a.href=url; a.download='calorie-tracker-backup.json'; document.body.appendChild(a); a.click(); a.remove();
@@ -877,7 +929,8 @@ function importData(e){
       if(d.profile) profile=Object.assign({weight:95,height:172.7,age:30,sex:'Male',activity:1.55,deficit:700,ppk:2.0},d.profile);
       if(Array.isArray(d.foods)) foods=d.foods; if(Array.isArray(d.weights)) weights=d.weights;
       if(Array.isArray(d.starred)) starred=d.starred;
-      saveProfile(); saveFoods(); saveWeights(); saveStarred(); syncProfileInputs(); renderProfile(); renderLog(); renderWeight();
+      if(Array.isArray(d.customFoods)) customFoods=d.customFoods;
+      saveProfile(); saveFoods(); saveWeights(); saveStarred(); saveCustomFoods(); syncProfileInputs(); renderProfile(); renderLog(); renderWeight();
       alert('Backup imported successfully.');
     }catch(err){ alert('Could not read that file. Make sure it is a Calorie Tracker backup (.json).'); }
     e.target.value=''; };

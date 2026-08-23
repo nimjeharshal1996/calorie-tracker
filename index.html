@@ -18,12 +18,18 @@
     --nav-h:64px;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not(.light) {
       --page:#0c0c0d; --card:#1a1a1c; --card2:#242427; --field:#242427;
       --text:#ffffff; --text2:#c3c2b7; --muted:#8a8880; --line:#2b2b2e; --border:rgba(255,255,255,.09);
       --accent:#3987e5; --accent-ink:#ffffff; --good:#22c55e; --crit:#e66767;
       --track:#2b2b2e; --shadow:none;
     }
+  }
+  :root.dark {
+    --page:#0c0c0d; --card:#1a1a1c; --card2:#242427; --field:#242427;
+    --text:#ffffff; --text2:#c3c2b7; --muted:#8a8880; --line:#2b2b2e; --border:rgba(255,255,255,.09);
+    --accent:#3987e5; --accent-ink:#ffffff; --good:#22c55e; --crit:#e66767;
+    --track:#2b2b2e; --shadow:none;
   }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { margin:0; padding:0; }
@@ -211,6 +217,22 @@
   .frow .star.on { opacity:1; }
   .star-divider { font-size:12px; font-weight:700; color:var(--muted); padding:12px 6px 4px;
     text-transform:uppercase; letter-spacing:.04em; }
+
+  /* toast notification */
+  .toast { position:fixed; bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 20px); left:50%;
+    transform:translateX(-50%) translateY(100px); background:var(--text); color:var(--page);
+    padding:12px 18px; border-radius:14px; font-size:14px; font-weight:600; z-index:200;
+    display:flex; align-items:center; gap:12px; box-shadow:0 6px 24px rgba(0,0,0,.3);
+    opacity:0; transition:transform .3s cubic-bezier(.2,.8,.2,1), opacity .3s; pointer-events:none; }
+  .toast.show { transform:translateX(-50%) translateY(0); opacity:1; pointer-events:auto; }
+  .toast .undo-btn { background:var(--accent); color:var(--accent-ink); border:none; border-radius:8px;
+    padding:6px 14px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
+
+  /* theme toggle */
+  .theme-seg { display:flex; background:var(--card2); border-radius:12px; padding:3px; margin-top:12px; }
+  .theme-seg button { flex:1; border:none; background:none; color:var(--text2); padding:8px 6px; border-radius:9px;
+    font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; transition:.15s; }
+  .theme-seg button.active { background:var(--card); color:var(--text); box-shadow:var(--shadow); }
 </style>
 </head>
 <body>
@@ -251,6 +273,15 @@
       <div class="tile"><div class="v" id="r-bmr">—</div><div class="k">BMR</div></div>
       <div class="tile"><div class="v" id="r-maint">—</div><div class="k">Maintenance</div></div>
       <div class="tile"><div class="v" id="r-protein">—</div><div class="k">Protein/day</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Appearance</div>
+    <div class="theme-seg">
+      <button id="theme-auto" onclick="setTheme('auto')">Auto</button>
+      <button id="theme-light" onclick="setTheme('light')">Light</button>
+      <button id="theme-dark" onclick="setTheme('dark')">Dark</button>
     </div>
   </div>
 
@@ -398,6 +429,26 @@
     </div>
   </div>
 </div>
+
+<!-- Edit meal sheet -->
+<div class="modal" id="editModal">
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="sheet-head">
+      <button class="head-btn" onclick="closeEdit()">Cancel</button>
+      <span class="head-title">Edit Meal</span>
+      <button class="head-btn primary" onclick="confirmEdit()">Save</button>
+    </div>
+    <div class="sheet-body">
+      <label class="fl">Meal name</label><input id="e-name" placeholder="Meal name">
+      <label class="fl">Calories (kcal)</label><input id="e-cal" type="number" inputmode="decimal">
+      <label class="fl">Protein (g)</label><input id="e-prot" type="number" inputmode="decimal">
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"><span id="toast-msg"></span><button class="undo-btn" id="toast-undo" onclick="undoDelete()">Undo</button></div>
 
 <script>
 // ---------- storage ----------
@@ -701,9 +752,10 @@ function renderLog(){
   box.innerHTML=day.map(f=>`<div class="meal">
       <div class="nm"><div class="t">${escapeHtml(f.name)}</div><small>${round(f.protein)} g protein</small></div>
       <div class="cal">${round(f.calories)} kcal</div>
+      <button class="del" onclick="openEdit('${f.id}')" aria-label="Edit" style="color:var(--accent)">✎</button>
       <button class="del" onclick="deleteFood('${f.id}')" aria-label="Delete">✕</button></div>`).join('');
 }
-function deleteFood(id){ foods=foods.filter(f=>f.id!==id); saveFoods(); renderLog(); }
+// deleteFood defined below with undo support
 
 // ---------- add meal sheet ----------
 let mode='search', sel=null;
@@ -842,7 +894,7 @@ function closeWeight(){ document.getElementById('weightModal').classList.remove(
 function confirmWeight(){ const v=num(document.getElementById('w-val').value); if(v<=0) return;
   const d=startOfDay(new Date(document.getElementById('w-date').value||new Date()));
   weights.push({id:uid(), weightKg:v, date:d.toISOString()}); saveWeights(); closeWeight(); renderWeight(); }
-function deleteWeight(id){ weights=weights.filter(w=>w.id!==id); saveWeights(); renderWeight(); }
+// deleteWeight defined below with undo support
 function computeChart(data){
   const W=340,H=210,padL=32,padR=12,padT=16,padB=26;
   const xs=data.map(d=>new Date(d.date).getTime()), ys=data.map(d=>d.weightKg);
@@ -949,10 +1001,75 @@ function showTab(t){ currentTab=t;
 }
 function fabAction(){ if(currentTab==='log') openAdd(); else if(currentTab==='weight') openWeight(); }
 // close sheets on backdrop tap
-['addModal','weightModal'].forEach(id=>document.getElementById(id).addEventListener('click',e=>{
+['addModal','weightModal','editModal'].forEach(id=>document.getElementById(id).addEventListener('click',e=>{
   if(e.target.id===id) document.getElementById(id).classList.remove('open'); }));
 
+// ---------- theme toggle ----------
+function setTheme(t){
+  LS.set('theme', t);
+  document.documentElement.classList.remove('dark','light');
+  if(t==='dark') document.documentElement.classList.add('dark');
+  else if(t==='light') document.documentElement.classList.add('light');
+  document.querySelectorAll('.theme-seg button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('theme-'+t).classList.add('active');
+  // update theme-color meta
+  const mc=t==='dark'?'#0c0c0d':t==='light'?'#f4f4f2':
+    (window.matchMedia('(prefers-color-scheme:dark)').matches?'#0c0c0d':'#f4f4f2');
+  document.querySelector('meta[name="theme-color"]').content=mc;
+}
+function initTheme(){ const t=LS.get('theme','auto'); setTheme(t); }
+
+// ---------- undo delete ----------
+let undoStack=null, undoTimer=null;
+function showToast(msg){
+  const el=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  el.classList.add('show');
+  clearTimeout(undoTimer);
+  undoTimer=setTimeout(()=>{ el.classList.remove('show'); undoStack=null; },5000);
+}
+function undoDelete(){
+  if(!undoStack) return;
+  const {type, item}=undoStack;
+  if(type==='food'){ foods.push(item); saveFoods(); renderLog(); }
+  else if(type==='weight'){ weights.push(item); saveWeights(); renderWeight(); }
+  undoStack=null;
+  document.getElementById('toast').classList.remove('show');
+  clearTimeout(undoTimer);
+}
+// override deleteFood
+function deleteFood(id){
+  const item=foods.find(f=>f.id===id);
+  foods=foods.filter(f=>f.id!==id); saveFoods(); renderLog();
+  if(item){ undoStack={type:'food',item}; showToast('Meal deleted'); }
+}
+function deleteWeight(id){
+  const item=weights.find(w=>w.id===id);
+  weights=weights.filter(w=>w.id!==id); saveWeights(); renderWeight();
+  if(item){ undoStack={type:'weight',item}; showToast('Weight entry deleted'); }
+}
+
+// ---------- edit meal ----------
+let editingId=null;
+function openEdit(id){
+  const item=foods.find(f=>f.id===id); if(!item) return;
+  editingId=id;
+  document.getElementById('e-name').value=item.name;
+  document.getElementById('e-cal').value=Math.round(item.calories);
+  document.getElementById('e-prot').value=Math.round(item.protein*10)/10;
+  document.getElementById('editModal').classList.add('open');
+}
+function closeEdit(){ document.getElementById('editModal').classList.remove('open'); editingId=null; }
+function confirmEdit(){
+  const item=foods.find(f=>f.id===editingId); if(!item) return;
+  item.name=document.getElementById('e-name').value.trim()||item.name;
+  item.calories=num(document.getElementById('e-cal').value);
+  item.protein=num(document.getElementById('e-prot').value);
+  saveFoods(); closeEdit(); renderLog();
+}
+
 // ---------- init ----------
+initTheme();
 bindProfile(); renderProfile(); renderLog(); renderWeight();
 </script>
 </body>

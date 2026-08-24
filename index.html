@@ -200,11 +200,13 @@
   .chip { background:var(--card2); border:none; color:var(--accent); padding:7px 13px; border-radius:11px;
     font-size:13px; font-weight:700; cursor:pointer; }
   .qty { display:flex; align-items:center; gap:10px; }
-  .qty button { width:48px; height:50px; border-radius:13px; border:none; background:var(--card2); color:var(--text);
+  .qty button { width:48px; height:54px; border-radius:13px; border:none; background:var(--card2); color:var(--text);
     font-size:24px; font-weight:400; cursor:pointer; flex-shrink:0; }
   .qty button:active { transform:scale(.93); }
-  .qty input { text-align:center; font-size:18px; font-weight:700; }
-  .qty .un { color:var(--muted); font-weight:600; width:34px; }
+  .qty input { text-align:center; font-size:20px; font-weight:700; height:54px; min-width:80px;
+    border-radius:13px; background:var(--field); border:2px solid var(--line); padding:0 8px; }
+  .qty input:focus { border-color:var(--accent); background:var(--card); }
+  .qty .un { color:var(--muted); font-weight:600; width:34px; font-size:15px; }
   .pvcard { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
   .pv { background:var(--card2); border-radius:14px; padding:14px; text-align:center; }
   .pv .v { font-size:26px; font-weight:800; letter-spacing:-.02em; }
@@ -391,7 +393,7 @@
         <label class="fl" id="qty-label">Grams</label>
         <div class="qty">
           <button onclick="adjustQty(-1)">−</button>
-          <input id="qty" type="number" inputmode="decimal" oninput="renderPreview()">
+          <input id="qty" type="number" inputmode="decimal" oninput="renderPreview()" onfocus="this.select()">
           <span class="un" id="qty-unit">g</span>
           <button onclick="adjustQty(1)">+</button>
         </div>
@@ -488,6 +490,27 @@ const FOODS = [
   {n:"Turkey breast",c:135,p:29,u:"g"},{n:"Egg (large)",c:78,p:6.3,u:"pc"},{n:"Egg white",c:17,p:3.6,u:"pc",k:"boiled"},
   {n:"Boiled egg (whole)",c:155,p:13,u:"g"},{n:"Fried egg",c:90,p:6,u:"pc"},{n:"Omelette",c:154,p:11,u:"g"},
   {n:"Egg bhurji",c:200,p:13,u:"g",k:"scrambled anda"},{n:"Egg curry",c:150,p:8,u:"g"},{n:"Egg roll",c:250,p:10,u:"pc"},
+  {n:"Half fry egg",c:90,p:6,u:"pc",k:"sunny side up single anda"},{n:"Double egg half fry",c:180,p:12,u:"pc",k:"sunny side two"},
+  {n:"Scrambled eggs",c:150,p:10,u:"g",k:"stirred fluffy american"},{n:"Poached egg",c:72,p:6,u:"pc",k:"water cooked runny"},
+  {n:"Egg omelette (cheese)",c:190,p:12,u:"pc",k:"omelet masala"},{n:"Masala omelette",c:160,p:10,u:"pc",k:"indian spicy onion chilli"},
+  {n:"Egg sandwich",c:280,p:12,u:"pc",k:"bread toast breakfast"},{n:"Egg salad",c:200,p:10,u:"g",k:"mayo boiled"},
+  {n:"Deviled eggs",c:65,p:4,u:"pc",k:"stuffed mayo"},{n:"Egg muffin",c:300,p:15,u:"pc",k:"mcmuffin breakfast"},
+  {n:"Egg dosa",c:200,p:8,u:"pc",k:"anda dosa south indian"},{n:"Egg paratha",c:320,p:10,u:"pc",k:"anda paratha"},
+  {n:"Egg maggi",c:200,p:7,u:"g",k:"anda noodles"},
+  {n:"Boiled egg white (2 pcs)",c:34,p:7.2,u:"pc",k:"protein diet gym"},
+  // Sandwiches (all types)
+  {n:"Salami sandwich",c:350,p:14,u:"pc",k:"deli meat italian"},{n:"Ham sandwich",c:280,p:15,u:"pc",k:"deli meat"},
+  {n:"Turkey sandwich",c:260,p:18,u:"pc",k:"deli meat low fat"},{n:"Tuna sandwich",c:300,p:18,u:"pc",k:"mayo fish"},
+  {n:"Egg mayo sandwich",c:290,p:11,u:"pc",k:"egg salad bread"},{n:"Paneer sandwich",c:300,p:12,u:"pc",k:"grilled indian"},
+  {n:"Paneer tikka sandwich",c:320,p:14,u:"pc",k:"grilled spicy indian"},{n:"Chicken tikka sandwich",c:310,p:18,u:"pc",k:"grilled spicy"},
+  {n:"Tandoori chicken sandwich",c:290,p:17,u:"pc",k:"grilled spicy indian"},{n:"Club sandwich (veg)",c:300,p:10,u:"pc",k:"triple layer"},
+  {n:"Club sandwich (chicken)",c:360,p:20,u:"pc",k:"triple layer non veg"},{n:"Subway veggie delite",c:230,p:8,u:"pc",k:"sub footlong"},
+  {n:"Subway chicken teriyaki",c:350,p:22,u:"pc",k:"sub footlong"},{n:"Subway tuna",c:400,p:18,u:"pc",k:"sub footlong"},
+  {n:"Pulled pork sandwich",c:380,p:20,u:"pc",k:"bbq american"},{n:"Caprese sandwich",c:280,p:12,u:"pc",k:"mozzarella tomato basil italian"},
+  {n:"Cuban sandwich",c:360,p:22,u:"pc",k:"ham pork cheese pickle"},{n:"Monte Cristo",c:400,p:18,u:"pc",k:"fried ham cheese french"},
+  {n:"Croissant sandwich",c:350,p:14,u:"pc",k:"ham cheese butter french"},{n:"Bagel sandwich",c:350,p:15,u:"pc",k:"cream cheese smoked salmon"},
+  {n:"Wrap (chicken)",c:300,p:16,u:"pc",k:"tortilla roll"},{n:"Wrap (veg/falafel)",c:280,p:9,u:"pc",k:"tortilla roll"},
+  {n:"Bombay sandwich",c:250,p:6,u:"pc",k:"indian chutney potato"},{n:"Toast sandwich (butter jam)",c:180,p:3,u:"pc",k:"breakfast simple"},
   // Paneer / veg protein
   {n:"Paneer",c:265,p:18,u:"g",k:"cottage cheese"},{n:"Palak paneer",c:180,p:8,u:"g",k:"spinach"},
   {n:"Paneer butter masala",c:230,p:8,u:"g",k:"makhani"},{n:"Matar paneer",c:180,p:8,u:"g",k:"peas"},

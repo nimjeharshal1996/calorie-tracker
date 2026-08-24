@@ -246,13 +246,24 @@
   <div class="card">
     <div class="card-title">Your details</div>
     <div class="grid2">
-      <div><label class="fl">Weight (kg)</label><input id="p-weight" type="number" inputmode="decimal"></div>
+      <div><label class="fl">Current weight (kg)</label><input id="p-curweight" type="number" inputmode="decimal"></div>
       <div><label class="fl">Height (cm)</label><input id="p-height" type="number" inputmode="decimal"></div>
     </div>
     <div class="grid2">
       <div><label class="fl">Age</label><input id="p-age" type="number" inputmode="numeric"></div>
       <div><label class="fl">Sex</label><select id="p-sex"><option>Male</option><option>Female</option></select></div>
     </div>
+    <div id="bmi-display" style="background:var(--card2);border-radius:14px;padding:14px;margin-top:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;">
+        <span style="font-size:12px;font-weight:600;color:var(--muted);">YOUR BMI</span>
+        <span id="bmi-val" style="font-size:22px;font-weight:800;">—</span>
+      </div>
+      <div id="bmi-cat" style="font-size:13px;color:var(--muted);margin-top:2px;">—</div>
+      <div id="bmi-range" style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4;">Healthy weight range: <b id="bmi-healthy">—</b></div>
+    </div>
+    <label class="fl">Target weight (kg)</label>
+    <input id="p-weight" type="number" inputmode="decimal">
+    <div class="hint">Calorie &amp; protein goals are calculated based on your target weight. Set this to what you want to reach.</div>
     <label class="fl">Activity level</label>
     <select id="p-activity">
       <option value="1.2">Sedentary — little or no exercise</option>
@@ -271,10 +282,11 @@
     <div class="lab">DAILY CALORIE TARGET</div>
     <div class="big" id="r-target">—</div>
     <div class="unit">kcal / day</div>
-    <div class="tiles">
+    <div class="tiles" style="grid-template-columns:1fr 1fr 1fr 1fr;">
       <div class="tile"><div class="v" id="r-bmr">—</div><div class="k">BMR</div></div>
-      <div class="tile"><div class="v" id="r-maint">—</div><div class="k">Maintenance</div></div>
-      <div class="tile"><div class="v" id="r-protein">—</div><div class="k">Protein/day</div></div>
+      <div class="tile"><div class="v" id="r-maint">—</div><div class="k">Maint.</div></div>
+      <div class="tile"><div class="v" id="r-protein">—</div><div class="k">Protein</div></div>
+      <div class="tile"><div class="v" id="r-bmi">—</div><div class="k">BMI</div></div>
     </div>
   </div>
 
@@ -456,7 +468,9 @@
 // ---------- storage ----------
 const LS = { get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},
              set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)) };
-let profile = LS.get('profile', {weight:95, height:172.7, age:30, sex:'Male', activity:1.55, deficit:700, ppk:2.0});
+let profile = LS.get('profile', {weight:95, height:172.7, age:30, sex:'Male', activity:1.55, deficit:700, ppk:2.0, curWeight:95});
+// backward compat: if curWeight missing, default to weight
+if(!profile.curWeight) profile.curWeight=profile.weight;
 let foods = LS.get('foods', []);
 let weights = LS.get('weights', []);
 let starred = LS.get('starred', []); // array of food indices
@@ -881,16 +895,34 @@ function bindProfile(){
     const el=document.getElementById(id); el.value=profile[key];
     el.addEventListener('input',()=>{ profile[key]=num(el.value); saveProfile(); renderProfile(); renderLog(); });
   }
+  // current weight field
+  const cw=document.getElementById('p-curweight'); cw.value=profile.curWeight;
+  cw.addEventListener('input',()=>{ profile.curWeight=num(cw.value); saveProfile(); renderProfile(); });
   const sex=document.getElementById('p-sex'); sex.value=profile.sex;
   sex.onchange=()=>{ profile.sex=sex.value; saveProfile(); renderProfile(); };
   const act=document.getElementById('p-activity'); act.value=String(profile.activity);
   act.onchange=()=>{ profile.activity=num(act.value); saveProfile(); renderProfile(); renderLog(); };
 }
+function calcBMI(weightKg, heightCm){
+  if(!weightKg||!heightCm) return {bmi:0,cat:'',min:0,max:0};
+  const hm=heightCm/100;
+  const bmi=weightKg/(hm*hm);
+  let cat='';
+  if(bmi<18.5) cat='Underweight';
+  else if(bmi<25) cat='Normal';
+  else if(bmi<30) cat='Overweight';
+  else cat='Obese';
+  const min=Math.round(18.5*hm*hm*10)/10;
+  const max=Math.round(24.9*hm*hm*10)/10;
+  return {bmi,cat,min,max};
+}
 function calc(){
   const s=profile.sex==='Male'?5:-161;
+  // BMR uses target weight (what you're aiming for)
   const bmr=10*profile.weight+6.25*profile.height-5*profile.age+s;
   const maint=bmr*profile.activity;
-  return { bmr, maint, target:maint-profile.deficit, protein:profile.weight*profile.ppk };
+  const bmiInfo=calcBMI(profile.curWeight, profile.height);
+  return { bmr, maint, target:maint-profile.deficit, protein:profile.weight*profile.ppk, bmi:bmiInfo };
 }
 function renderProfile(){
   const c=calc();
@@ -898,6 +930,13 @@ function renderProfile(){
   document.getElementById('r-bmr').textContent=round(c.bmr);
   document.getElementById('r-maint').textContent=round(c.maint);
   document.getElementById('r-protein').textContent=round(c.protein)+'g';
+  document.getElementById('r-bmi').textContent=c.bmi.bmi>0?c.bmi.bmi.toFixed(1):'—';
+  // BMI display card
+  const bmi=c.bmi;
+  document.getElementById('bmi-val').textContent=bmi.bmi>0?bmi.bmi.toFixed(1):'—';
+  document.getElementById('bmi-cat').textContent=bmi.cat||'—';
+  document.getElementById('bmi-cat').style.color=bmi.cat==='Normal'?'var(--good)':bmi.cat==='Overweight'||bmi.cat==='Obese'?'var(--crit)':'var(--muted)';
+  document.getElementById('bmi-healthy').textContent=bmi.min>0?`${bmi.min} – ${bmi.max} kg`:'—';
 }
 
 // ---------- daily log ----------
@@ -1137,6 +1176,7 @@ function attachChartTouch(g){
 // ---------- export / import ----------
 function syncProfileInputs(){
   document.getElementById('p-weight').value=profile.weight; document.getElementById('p-height').value=profile.height;
+  document.getElementById('p-curweight').value=profile.curWeight;
   document.getElementById('p-age').value=profile.age; document.getElementById('p-deficit').value=profile.deficit;
   document.getElementById('p-ppk').value=profile.ppk; document.getElementById('p-sex').value=profile.sex;
   document.getElementById('p-activity').value=String(profile.activity);
@@ -1153,7 +1193,7 @@ function importData(e){
   const reader=new FileReader();
   reader.onload=()=>{ try{ const d=JSON.parse(reader.result);
       if(!confirm('Import this backup? It will replace all data on this device.')){ e.target.value=''; return; }
-      if(d.profile) profile=Object.assign({weight:95,height:172.7,age:30,sex:'Male',activity:1.55,deficit:700,ppk:2.0},d.profile);
+      if(d.profile) { profile=Object.assign({weight:95,height:172.7,age:30,sex:'Male',activity:1.55,deficit:700,ppk:2.0,curWeight:95},d.profile); if(!profile.curWeight) profile.curWeight=profile.weight; }
       if(Array.isArray(d.foods)) foods=d.foods; if(Array.isArray(d.weights)) weights=d.weights;
       if(Array.isArray(d.starred)) starred=d.starred;
       if(Array.isArray(d.customFoods)) customFoods=d.customFoods;

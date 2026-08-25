@@ -20,7 +20,7 @@
   --track:#ebebeb;
   --shadow:0 1px 3px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.03);
   --shadow-lg:0 4px 24px rgba(0,0,0,.08);
-  --nav-h:56px;
+  --nav-h:64px;
   --radius-lg:22px; --radius-md:14px; --radius-sm:10px; --radius-xs:8px;
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",system-ui,sans-serif;
 }
@@ -60,12 +60,12 @@ body{
 /* Layout */
 .appbar{
   position:sticky;top:0;z-index:30;
-  padding:calc(env(safe-area-inset-top) + 12px) 20px 10px;
+  padding:calc(env(safe-area-inset-top) + 16px) 20px 12px;
   background:color-mix(in srgb, var(--bg) 82%, transparent);
   backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
-  font-size:26px;font-weight:750;letter-spacing:-.025em;color:var(--text);
+  font-size:28px;font-weight:750;letter-spacing:-.025em;color:var(--text);
 }
-.page{display:none;padding:2px 18px 32px;max-width:500px;margin:0 auto}
+.page{display:none;padding:4px 16px 28px;max-width:520px;margin:0 auto}
 .page.active{display:block;animation:pageIn .2s ease}
 @keyframes pageIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
 
@@ -120,7 +120,7 @@ select{appearance:none;-webkit-appearance:none;
 
 /* Date nav */
 .datenav{display:flex;align-items:center;justify-content:space-between;padding:6px 0 2px}
-.nav-arrow{background:none;border:none;color:var(--text3);width:44px;height:44px;border-radius:var(--radius-md);
+.nav-arrow{background:var(--surface2);border:none;color:var(--text);width:44px;height:44px;border-radius:var(--radius-md);
   font-size:20px;display:grid;place-items:center;cursor:pointer;transition:background .15s}
 .nav-arrow:hover{background:var(--surface2)}
 .nav-arrow:active{transform:scale(.92)}
@@ -190,10 +190,10 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:45;display:flex;
   backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);
   border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);
   height:calc(var(--nav-h) + env(safe-area-inset-bottom))}
-nav button{flex:1;background:none;border:none;color:var(--muted);font-size:10.5px;font-weight:600;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;
+nav button{flex:1;background:none;border:none;color:var(--muted);font-size:11px;font-weight:600;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;
   transition:color .15s}
-nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;transition:stroke .15s}
+nav button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;transition:stroke .15s}
 nav button.active{color:var(--accent)}
 
 /* Modal / Sheet */

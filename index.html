@@ -459,6 +459,14 @@
       <label class="fl">Meal name</label><input id="e-name" placeholder="Meal name">
       <label class="fl">Calories (kcal)</label><input id="e-cal" type="number" inputmode="decimal">
       <label class="fl">Protein (g)</label><input id="e-prot" type="number" inputmode="decimal">
+      <label class="fl">Quick adjust</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="chip" onclick="scaleEdit(0.5)">½×</button>
+        <button class="chip" onclick="scaleEdit(0.75)">¾×</button>
+        <button class="chip" onclick="scaleEdit(1.5)">1.5×</button>
+        <button class="chip" onclick="scaleEdit(2)">2×</button>
+      </div>
+      <div class="hint">Scales calories &amp; protein proportionally.</div>
     </div>
   </div>
 </div>
@@ -821,7 +829,11 @@ const FOODS = [
   {n:"Fresh cream",c:340,p:2,u:"g",k:"malai"},{n:"Condensed milk",c:321,p:8,u:"g"},{n:"Cooking oil",c:884,p:0,u:"g",k:"olive sunflower vegetable"},
   // Nuts & seeds
   {n:"Almonds",c:579,p:21,u:"g",k:"badam"},{n:"Peanuts",c:567,p:26,u:"g",k:"groundnut moongphali"},
-  {n:"Peanut butter",c:588,p:25,u:"g"},{n:"Cashews",c:553,p:18,u:"g",k:"kaju"},{n:"Walnuts",c:654,p:15,u:"g",k:"akhrot"},
+  {n:"Peanut butter",c:588,p:25,u:"g"},{n:"Peanut butter toast",c:200,p:7,u:"pc",k:"bread pb breakfast"},
+  {n:"Peanut butter banana toast",c:250,p:7.5,u:"pc",k:"bread pb breakfast healthy"},
+  {n:"Peanut butter sandwich",c:350,p:14,u:"pc",k:"bread pb protein"},
+  {n:"Peanut butter & jelly sandwich",c:380,p:11,u:"pc",k:"PBJ bread american"},
+  {n:"Cashews",c:553,p:18,u:"g",k:"kaju"},{n:"Walnuts",c:654,p:15,u:"g",k:"akhrot"},
   {n:"Pistachios",c:562,p:20,u:"g",k:"pista"},{n:"Chia seeds",c:486,p:17,u:"g"},{n:"Flax seeds",c:534,p:18,u:"g",k:"alsi"},
   {n:"Pumpkin seeds",c:559,p:30,u:"g"},{n:"Sunflower seeds",c:584,p:21,u:"g"},{n:"Mixed nuts",c:607,p:20,u:"g"},
   {n:"Dates",c:277,p:1.8,u:"g",k:"khajur"},{n:"Raisins",c:299,p:3.1,u:"g",k:"kishmish"},{n:"Fig (dried)",c:249,p:3.3,u:"g",k:"anjeer"},
@@ -902,6 +914,9 @@ const ALT_UNITS = {
   "Walnuts":{u:"pc",c:26,p:0.6},
   "Biscuit":{u:"pc",c:20,p:0.3},
   "Cookies":{u:"pc",c:50,p:0.6},
+  "Omelette":{u:"pc",c:92,p:6.5},
+  "Boiled egg (whole)":{u:"pc",c:78,p:6.3},
+  "Scrambled eggs":{u:"pc",c:91,p:6},
 };
 
 
@@ -1301,6 +1316,11 @@ function confirmEdit(){
   item.calories=num(document.getElementById('e-cal').value);
   item.protein=num(document.getElementById('e-prot').value);
   saveFoods(); closeEdit(); renderLog();
+}
+function scaleEdit(factor){
+  const calEl=document.getElementById('e-cal'), protEl=document.getElementById('e-prot');
+  calEl.value=Math.round(num(calEl.value)*factor);
+  protEl.value=Math.round(num(protEl.value)*factor*10)/10;
 }
 
 // ---------- init ----------

@@ -365,6 +365,48 @@
   </div>
 </section>
 
+<!-- SUMMARY -->
+<section id="page-summary" class="page">
+  <div class="card">
+    <div class="grid2" style="margin-bottom:14px;">
+      <div><label class="fl" style="margin-top:0">From</label><input id="sum-from" type="date" onchange="renderSummary()"></div>
+      <div><label class="fl" style="margin-top:0">To</label><input id="sum-to" type="date" onchange="renderSummary()"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <button class="chip" onclick="setSumRange(7)">Last 7 days</button>
+      <button class="chip" onclick="setSumRange(14)">Last 14 days</button>
+      <button class="chip" onclick="setSumRange(30)">Last 30 days</button>
+      <button class="chip" onclick="setSumRange(90)">Last 90 days</button>
+    </div>
+    <div class="wstats" id="sum-stats">
+      <div class="wstat"><div class="k">Avg daily cal</div><div class="v" id="sum-avgcal">—</div></div>
+      <div class="wstat"><div class="k">Total cal</div><div class="v" id="sum-totalcal">—</div></div>
+      <div class="wstat"><div class="k">Avg daily protein</div><div class="v" id="sum-avgprot">—</div></div>
+      <div class="wstat"><div class="k">Total protein</div><div class="v" id="sum-totalprot">—</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+      <div class="wstat"><div class="k">Days logged</div><div class="v" id="sum-days">—</div></div>
+      <div class="wstat"><div class="k">Days on target</div><div class="v" id="sum-ontarget">—</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+      <div class="wstat"><div class="k">Avg daily deficit</div><div class="v" id="sum-avgdeficit">—</div></div>
+      <div class="wstat"><div class="k">Est. weight change</div><div class="v" id="sum-estweight">—</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+      <div class="wstat"><div class="k">Highest day</div><div class="v" id="sum-highest">—</div></div>
+      <div class="wstat"><div class="k">Lowest day</div><div class="v" id="sum-lowest">—</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+      <div class="wstat"><div class="k">Avg meals/day</div><div class="v" id="sum-avgmeals">—</div></div>
+      <div class="wstat"><div class="k">Protein target hit</div><div class="v" id="sum-prothit">—</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Daily calories</div>
+    <div id="sum-chart"></div>
+  </div>
+</section>
+
 <!-- FAB -->
 <button class="fab" id="fab" onclick="fabAction()">+</button>
 
@@ -373,7 +415,9 @@
   <button id="tab-profile" class="active" onclick="showTab('profile')">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Profile</button>
   <button id="tab-log" onclick="showTab('log')">
-    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Daily Log</button>
+    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Log</button>
+  <button id="tab-summary" onclick="showTab('summary')">
+    <svg viewBox="0 0 24 24"><path d="M4 20h4V10H4zm6 0h4V4h-4zm6 0h4v-8h-4z"/></svg>Summary</button>
   <button id="tab-weight" onclick="showTab('weight')">
     <svg viewBox="0 0 24 24"><path d="M4 18l5-6 4 3 7-9"/><path d="M4 21h16"/></svg>Weight</button>
 </nav>
@@ -746,7 +790,18 @@ const FOODS = [
   {n:"Chicken nuggets",c:296,p:15,u:"g"},{n:"Hot dog",c:290,p:11,u:"pc"},{n:"Shawarma",c:250,p:14,u:"pc",k:"roll"},
   {n:"Falafel",c:333,p:13,u:"g"},{n:"Hummus",c:166,p:8,u:"g"},
   // Salads & soups
-  {n:"Green salad",c:30,p:1.5,u:"g"},{n:"Caesar salad",c:180,p:6,u:"g"},{n:"Coleslaw",c:150,p:1.5,u:"g"},
+  {n:"Green salad",c:30,p:1.5,u:"g",k:"cucumber carrot tomato lettuce"},{n:"Onion salad",c:25,p:0.8,u:"g",k:"pyaz laccha raw"},
+  {n:"Cucumber salad",c:15,p:0.7,u:"g",k:"kheera"},{n:"Tomato onion salad",c:25,p:1,u:"g",k:"kachumber raw"},
+  {n:"Carrot salad",c:35,p:0.9,u:"g",k:"gajar grated"},{n:"Beetroot salad",c:45,p:1.5,u:"g",k:"chukandar boiled"},
+  {n:"Mixed veg salad",c:30,p:1.5,u:"g",k:"cucumber carrot tomato onion capsicum"},
+  {n:"Cabbage salad",c:25,p:1.2,u:"g",k:"patta gobi raw"},{n:"Corn salad",c:80,p:3,u:"g",k:"sweet corn boiled"},
+  {n:"Chickpea salad",c:120,p:6,u:"g",k:"chana protein"},{n:"Paneer salad",c:150,p:8,u:"g",k:"cottage cheese cubes"},
+  {n:"Chicken salad",c:130,p:14,u:"g",k:"grilled protein"},{n:"Tuna salad",c:140,p:15,u:"g",k:"mayo protein"},
+  {n:"Pasta salad",c:160,p:4,u:"g",k:"cold mayo"},{n:"Quinoa salad",c:120,p:5,u:"g",k:"healthy grain"},
+  {n:"Caesar salad",c:180,p:6,u:"g",k:"lettuce parmesan croutons"},{n:"Coleslaw",c:150,p:1.5,u:"g",k:"cabbage mayo"},
+  {n:"Garden salad",c:35,p:1.5,u:"g",k:"mixed greens lettuce"},{n:"Russian salad",c:170,p:3,u:"g",k:"mayo potato peas"},
+  {n:"Fruit salad",c:50,p:0.5,u:"g",k:"mixed fresh"},{n:"Avocado salad",c:120,p:2,u:"g",k:"guacamole healthy"},
+  {n:"Bean salad",c:100,p:5,u:"g",k:"rajma kidney mixed"},{n:"Mushroom salad",c:30,p:2,u:"g",k:"raw sliced"},
   {n:"Veg soup",c:40,p:1.5,u:"g"},{n:"Tomato soup",c:50,p:1.2,u:"g"},{n:"Sweet corn soup",c:60,p:1.8,u:"g"},
   {n:"Chicken soup",c:45,p:4,u:"g"},
   // American
@@ -1241,13 +1296,13 @@ function importData(e){
 
 // ---------- tabs & FAB ----------
 function showTab(t){ currentTab=t;
-  ['profile','log','weight'].forEach(x=>{
+  ['profile','log','summary','weight'].forEach(x=>{
     document.getElementById('page-'+x).classList.toggle('active',x===t);
     document.getElementById('tab-'+x).classList.toggle('active',x===t);
   });
-  document.getElementById('title').textContent={profile:'Profile',log:'Daily Log',weight:'Weight'}[t];
-  const fab=document.getElementById('fab'); fab.classList.toggle('show',t!=='profile');
-  if(t==='log') renderLog(); if(t==='weight') renderWeight();
+  document.getElementById('title').textContent={profile:'Profile',log:'Daily Log',summary:'Summary',weight:'Weight'}[t];
+  const fab=document.getElementById('fab'); fab.classList.toggle('show',t==='log'||t==='weight');
+  if(t==='log') renderLog(); if(t==='weight') renderWeight(); if(t==='summary') renderSummary();
 }
 function fabAction(){ if(currentTab==='log') openAdd(); else if(currentTab==='weight') openWeight(); }
 // close sheets on backdrop tap
@@ -1323,8 +1378,132 @@ function scaleEdit(factor){
   protEl.value=Math.round(num(protEl.value)*factor*10)/10;
 }
 
+// ---------- summary ----------
+function setSumRange(days){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const from=new Date(today); from.setDate(from.getDate()-days+1);
+  document.getElementById('sum-from').value=from.toISOString().slice(0,10);
+  document.getElementById('sum-to').value=today.toISOString().slice(0,10);
+  renderSummary();
+}
+function initSummaryDates(){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const from=new Date(today); from.setDate(from.getDate()-6);
+  document.getElementById('sum-from').value=from.toISOString().slice(0,10);
+  document.getElementById('sum-to').value=today.toISOString().slice(0,10);
+}
+function renderSummary(){
+  const fromVal=document.getElementById('sum-from').value;
+  const toVal=document.getElementById('sum-to').value;
+  if(!fromVal||!toVal) return;
+  const from=startOfDay(new Date(fromVal));
+  const to=startOfDay(new Date(toVal));
+  if(from>to) return;
+  const sumDays=Math.round((to-from)/(86400000))+1;
+  // collect daily data
+  const c=calc();
+  const dailyData=[];
+  for(let i=0;i<sumDays;i++){
+    const d=new Date(from); d.setDate(d.getDate()+i);
+    const dayFoods=foods.filter(f=>sameDay(f.date,d));
+    const cals=dayFoods.reduce((s,f)=>s+f.calories,0);
+    const prot=dayFoods.reduce((s,f)=>s+f.protein,0);
+    dailyData.push({date:d,cals,prot,logged:dayFoods.length>0});
+  }
+  const loggedDays=dailyData.filter(d=>d.logged);
+  const totalCal=loggedDays.reduce((s,d)=>s+d.cals,0);
+  const totalProt=loggedDays.reduce((s,d)=>s+d.prot,0);
+  const avgCal=loggedDays.length?totalCal/loggedDays.length:0;
+  const avgProt=loggedDays.length?totalProt/loggedDays.length:0;
+  const onTarget=loggedDays.filter(d=>d.cals<=c.target).length;
+
+  document.getElementById('sum-avgcal').textContent=round(avgCal);
+  document.getElementById('sum-totalcal').textContent=round(totalCal).toLocaleString();
+  document.getElementById('sum-avgprot').textContent=round(avgProt)+'g';
+  document.getElementById('sum-totalprot').textContent=round(totalProt)+'g';
+  document.getElementById('sum-days').textContent=loggedDays.length+' / '+sumDays;
+  document.getElementById('sum-ontarget').textContent=onTarget+' / '+loggedDays.length;
+  document.getElementById('sum-ontarget').style.color=loggedDays.length>0&&onTarget>=loggedDays.length/2?'var(--good)':'var(--crit)';
+
+  // avg deficit (maintenance - avg consumed)
+  const avgDeficit=loggedDays.length?c.maint-avgCal:0;
+  const defEl=document.getElementById('sum-avgdeficit');
+  defEl.textContent=(avgDeficit>=0?'':'+') + round(Math.abs(avgDeficit)) + ' kcal';
+  defEl.style.color=avgDeficit>=0?'var(--good)':'var(--crit)';
+
+  // estimated weight change (7700 kcal ≈ 1 kg fat; total deficit over period)
+  const totalDeficit=loggedDays.reduce((s,d)=>s+(c.maint-d.cals),0);
+  const estKg=totalDeficit/7700;
+  const estEl=document.getElementById('sum-estweight');
+  estEl.textContent=(estKg>=0?'−':'+') + Math.abs(estKg).toFixed(2) + ' kg';
+  estEl.style.color=estKg>=0?'var(--good)':'var(--crit)';
+
+  // highest / lowest day
+  if(loggedDays.length>0){
+    const highDay=loggedDays.reduce((a,b)=>a.cals>b.cals?a:b);
+    const lowDay=loggedDays.reduce((a,b)=>a.cals<b.cals?a:b);
+    const dfmt=d=>d.date.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+    document.getElementById('sum-highest').innerHTML=round(highDay.cals)+'<br><span style="font-size:11px;color:var(--muted);">'+dfmt(highDay)+'</span>';
+    document.getElementById('sum-lowest').innerHTML=round(lowDay.cals)+'<br><span style="font-size:11px;color:var(--muted);">'+dfmt(lowDay)+'</span>';
+  } else {
+    document.getElementById('sum-highest').textContent='—';
+    document.getElementById('sum-lowest').textContent='—';
+  }
+
+  // avg meals per day
+  const totalMeals=loggedDays.reduce((s,d)=>{
+    const dayDate=d.date;
+    return s+foods.filter(f=>sameDay(f.date,dayDate)).length;
+  },0);
+  document.getElementById('sum-avgmeals').textContent=loggedDays.length?(totalMeals/loggedDays.length).toFixed(1):'—';
+
+  // protein target hit days
+  const protTarget=c.protein;
+  const protHitDays=loggedDays.filter(d=>d.prot>=protTarget).length;
+  const protEl=document.getElementById('sum-prothit');
+  protEl.textContent=protHitDays+' / '+loggedDays.length;
+  protEl.style.color=loggedDays.length>0&&protHitDays>=loggedDays.length/2?'var(--good)':'var(--crit)';
+
+  // bar chart
+  const chartEl=document.getElementById('sum-chart');
+  if(loggedDays.length===0){chartEl.innerHTML='<div class="empty">No data yet for this period.</div>';return;}
+  const W=360,H=180,padL=36,padR=8,padT=14,padB=28;
+  const maxCal=Math.max(c.target,...dailyData.map(d=>d.cals))*1.1||1;
+  const barW=Math.max(4,Math.min(20,(W-padL-padR)/sumDays-2));
+  const gap=(W-padL-padR)/sumDays;
+  let svg=`<svg viewBox="0 0 ${W} ${H}" style="display:block;width:100%;height:auto;overflow:visible;">`;
+  // target line
+  const targetY=H-padB-(c.target/maxCal)*(H-padT-padB);
+  svg+=`<line x1="${padL}" y1="${targetY}" x2="${W-padR}" y2="${targetY}" stroke="var(--accent)" stroke-width="1" stroke-dasharray="4,3" opacity=".5"/>`;
+  svg+=`<text x="${padL-4}" y="${targetY+3}" text-anchor="end" fill="var(--accent)" font-size="9" font-weight="600">${round(c.target)}</text>`;
+  // bars
+  dailyData.forEach((d,i)=>{
+    const x=padL+i*gap+gap/2-barW/2;
+    const barH=d.cals>0?(d.cals/maxCal)*(H-padT-padB):0;
+    const y=H-padB-barH;
+    const color=d.cals>c.target?'var(--crit)':d.logged?'var(--good)':'var(--track)';
+    svg+=`<rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="${Math.min(barW/2,4)}" fill="${color}" opacity="${d.logged?.75:.3}"/>`;
+    // day label (show every Nth to avoid overlap)
+    const showLabel=sumDays<=14||(i%Math.ceil(sumDays/10)===0)||i===sumDays-1;
+    if(showLabel){
+      const label=d.date.toLocaleDateString(undefined,{day:'numeric'});
+      svg+=`<text x="${x+barW/2}" y="${H-padB+14}" text-anchor="middle" fill="var(--muted)" font-size="9">${label}</text>`;
+    }
+  });
+  // Y axis labels
+  svg+=`<text x="${padL-4}" y="${H-padB+3}" text-anchor="end" fill="var(--muted)" font-size="9">0</text>`;
+  svg+=`<text x="${padL-4}" y="${padT+4}" text-anchor="end" fill="var(--muted)" font-size="9">${round(maxCal)}</text>`;
+  svg+=`</svg>`;
+  svg+=`<div style="display:flex;gap:14px;justify-content:center;margin-top:8px;font-size:11px;color:var(--muted);">`;
+  svg+=`<span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--good);opacity:.75;"></span> On target</span>`;
+  svg+=`<span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--crit);opacity:.75;"></span> Over target</span>`;
+  svg+=`<span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--track);"></span> No data</span>`;
+  svg+=`</div>`;
+  chartEl.innerHTML=svg;
+}
+
 // ---------- init ----------
-initTheme();
+initTheme(); initSummaryDates();
 bindProfile(); renderProfile(); renderLog(); renderWeight();
 </script>
 </body>

@@ -348,9 +348,9 @@
   <div class="card">
     <div class="card-title">Appearance</div>
     <div class="theme-seg">
-      <button id="theme-auto" onclick="setTheme('auto')">Auto</button>
-      <button id="theme-light" onclick="setTheme('light')">Light</button>
-      <button id="theme-dark" onclick="setTheme('dark')">Dark</button>
+      <button type="button" id="theme-auto" onclick="setTheme('auto')">Auto</button>
+      <button type="button" id="theme-light" onclick="setTheme('light')">Light</button>
+      <button type="button" id="theme-dark" onclick="setTheme('dark')">Dark</button>
     </div>
   </div>
 
@@ -358,8 +358,8 @@
     <div class="card-title">Backup</div>
     <div class="hint" style="margin-top:0">Data lives only on this device. Export a file to back it up or move it to another phone, then Import it there.</div>
     <div class="btn-row" style="margin-top:14px">
-      <button class="btn btn-ghost" onclick="exportData()">Export</button>
-      <button class="btn btn-primary" onclick="document.getElementById('import-file').click()">Import</button>
+      <button type="button" class="btn btn-ghost" onclick="exportData()">Export</button>
+      <button type="button" class="btn btn-primary" onclick="document.getElementById('import-file').click()">Import</button>
     </div>
     <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importData(event)">
   </div>
@@ -369,9 +369,9 @@
 <section id="page-log" class="page">
   <div class="card">
     <div class="datenav">
-      <button class="nav-arrow" onclick="changeDay(-1)">‹</button>
+      <button type="button" class="nav-arrow" onclick="changeDay(-1)">‹</button>
       <div class="datelabel"><div class="wk" id="d-wk"></div><div class="dt" id="d-dt"></div></div>
-      <button class="nav-arrow" onclick="changeDay(1)">›</button>
+      <button type="button" class="nav-arrow" onclick="changeDay(1)">›</button>
     </div>
     <div class="center" id="today-wrap"></div>
   </div>
@@ -426,10 +426,10 @@
       <div class="date-field"><label class="fl" style="margin-top:0">To</label><input id="sum-to" type="date" onchange="renderSummary()"></div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;" class="chip-grid">
-      <button class="chip" onclick="setSumRange(7)">Last 7 days</button>
-      <button class="chip" onclick="setSumRange(14)">Last 14 days</button>
-      <button class="chip" onclick="setSumRange(30)">Last 30 days</button>
-      <button class="chip" onclick="setSumRange(90)">Last 90 days</button>
+      <button type="button" class="chip" onclick="setSumRange(7)">Last 7 days</button>
+      <button type="button" class="chip" onclick="setSumRange(14)">Last 14 days</button>
+      <button type="button" class="chip" onclick="setSumRange(30)">Last 30 days</button>
+      <button type="button" class="chip" onclick="setSumRange(90)">Last 90 days</button>
     </div>
     <div class="wstats" id="sum-stats">
       <div class="wstat"><div class="k">Avg daily cal</div><div class="v" id="sum-avgcal">—</div></div>
@@ -461,17 +461,17 @@
 </section>
 
 <!-- FAB -->
-<button class="fab" id="fab" onclick="fabAction()">+</button>
+<button type="button" class="fab" id="fab" onclick="fabAction()">+</button>
 
 <!-- Nav -->
 <nav>
-  <button id="tab-profile" class="active" onclick="showTab('profile')">
+  <button type="button" id="tab-profile" class="active" onclick="showTab('profile')">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Profile</button>
-  <button id="tab-log" onclick="showTab('log')">
+  <button type="button" id="tab-log" onclick="showTab('log')">
     <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Log</button>
-  <button id="tab-summary" onclick="showTab('summary')">
+  <button type="button" id="tab-summary" onclick="showTab('summary')">
     <svg viewBox="0 0 24 24"><rect x="4" y="12" width="4" height="8" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="16" y="9" width="4" height="11" rx="1"/></svg>Summary</button>
-  <button id="tab-weight" onclick="showTab('weight')">
+  <button type="button" id="tab-weight" onclick="showTab('weight')">
     <svg viewBox="0 0 24 24"><path d="M4 18l5-6 4 3 7-9"/><path d="M4 21h16"/></svg>Weight</button>
 </nav>
 
@@ -480,33 +480,33 @@
   <div class="sheet">
     <div class="grabber"></div>
     <div class="sheet-head">
-      <button class="head-btn" onclick="closeAdd()">Cancel</button>
+      <button type="button" class="head-btn" onclick="closeAdd()">Cancel</button>
       <span class="head-title">Add Meal</span>
-      <button class="head-btn primary" id="add-confirm" onclick="confirmAdd()">Add</button>
+      <button type="button" class="head-btn primary" id="add-confirm" onclick="confirmAdd()">Add</button>
     </div>
     <div class="sheet-body" id="sheet-body">
       <div class="sheet-sticky">
         <div class="seg">
-          <button id="seg-search" class="active" onclick="setMode('search')">Search</button>
-          <button id="seg-custom" onclick="setMode('custom')">Custom</button>
+          <button type="button" id="seg-search" class="active" onclick="setMode('search')">Search</button>
+          <button type="button" id="seg-custom" onclick="setMode('custom')">Custom</button>
         </div>
         <div class="searchbox" id="searchbox">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
           <input id="food-q" placeholder="Search foods (e.g. veg raita)" oninput="renderResults()" onkeydown="if(event.key==='Enter'){this.blur();}" autocomplete="off" enterkeyhint="done">
-          <button class="kb-done" onclick="document.getElementById('food-q').blur()">Done</button>
+          <button type="button" class="kb-done" onclick="document.getElementById('food-q').blur()">Done</button>
         </div>
         <div class="rescount" id="rescount"></div>
       </div>
       <div id="results"></div>
       <div id="pick-qty" style="display:none">
         <div class="sel-head"><span class="sn" id="sel-name"></span>
-          <span><button class="chip" id="unit-toggle" onclick="toggleUnit()" style="display:none;margin-right:6px">⇄ Unit</button><button class="chip" onclick="clearSel()">↺ Change</button></span></div>
+          <span><button type="button" class="chip" id="unit-toggle" onclick="toggleUnit()" style="display:none;margin-right:6px">⇄ Unit</button><button type="button" class="chip" onclick="clearSel()">↺ Change</button></span></div>
         <label class="fl" id="qty-label">Grams</label>
         <div class="qty">
-          <button onclick="adjustQty(-1)">−</button>
+          <button type="button" onclick="adjustQty(-1)">−</button>
           <input id="qty" type="number" inputmode="decimal" oninput="renderPreview()" onfocus="this.select()">
           <span class="un" id="qty-unit">g</span>
-          <button onclick="adjustQty(1)">+</button>
+          <button type="button" onclick="adjustQty(1)">+</button>
         </div>
         <div class="pvcard">
           <div class="pv"><div class="v" id="pv-cal">0</div><div class="k">Calories (kcal)</div></div>
@@ -532,9 +532,9 @@
   <div class="sheet">
     <div class="grabber"></div>
     <div class="sheet-head">
-      <button class="head-btn" onclick="closeWeight()">Cancel</button>
+      <button type="button" class="head-btn" onclick="closeWeight()">Cancel</button>
       <span class="head-title">Log Weight</span>
-      <button class="head-btn primary" onclick="confirmWeight()">Save</button>
+      <button type="button" class="head-btn primary" onclick="confirmWeight()">Save</button>
     </div>
     <div class="sheet-body">
       <label class="fl">Weight (kg)</label><input id="w-val" type="number" inputmode="decimal">
@@ -548,9 +548,9 @@
   <div class="sheet">
     <div class="grabber"></div>
     <div class="sheet-head">
-      <button class="head-btn" onclick="closeEdit()">Cancel</button>
+      <button type="button" class="head-btn" onclick="closeEdit()">Cancel</button>
       <span class="head-title">Edit Meal</span>
-      <button class="head-btn primary" onclick="confirmEdit()">Save</button>
+      <button type="button" class="head-btn primary" onclick="confirmEdit()">Save</button>
     </div>
     <div class="sheet-body">
       <label class="fl">Meal name</label><input id="e-name" placeholder="Meal name">
@@ -558,10 +558,10 @@
       <label class="fl">Protein (g)</label><input id="e-prot" type="number" inputmode="decimal">
       <label class="fl">Quick adjust</label>
       <div class="adjust-row">
-        <button class="chip" onclick="scaleEdit(0.5)">½×</button>
-        <button class="chip" onclick="scaleEdit(0.75)">¾×</button>
-        <button class="chip" onclick="scaleEdit(1.5)">1.5×</button>
-        <button class="chip" onclick="scaleEdit(2)">2×</button>
+        <button type="button" class="chip" onclick="scaleEdit(0.5)">½×</button>
+        <button type="button" class="chip" onclick="scaleEdit(0.75)">¾×</button>
+        <button type="button" class="chip" onclick="scaleEdit(1.5)">1.5×</button>
+        <button type="button" class="chip" onclick="scaleEdit(2)">2×</button>
       </div>
       <div class="hint">Scales calories &amp; protein proportionally.</div>
     </div>
@@ -569,7 +569,7 @@
 </div>
 
 <!-- Toast -->
-<div class="toast" id="toast"><span id="toast-msg"></span><button class="undo-btn" id="toast-undo" onclick="undoDelete()">Undo</button></div>
+<div class="toast" id="toast"><span id="toast-msg"></span><button type="button" class="undo-btn" id="toast-undo" onclick="undoDelete()">Undo</button></div>
 
 <script>
 // ---------- storage ----------
